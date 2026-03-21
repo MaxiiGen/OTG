@@ -163,7 +163,6 @@ function MenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void 
   type MenuItem = { icon: React.ElementType; label: string; action: () => void } | { divider: true }
   
   const menuItems: MenuItem[] = [
-    { icon: User, label: 'My Profile', action: () => {} },
     { icon: MapPin, label: 'Saved Routes', action: () => {} },
     { icon: Clock, label: 'Trip History', action: () => {} },
     { divider: true },
