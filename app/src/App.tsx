@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { 
   Home, Menu, Bell, X, Navigation, 
-  HelpCircle, Shield, Settings, User, 
+  HelpCircle, Shield, Settings,
   ChevronRight, Bus, MapPin, Clock, Info
 } from 'lucide-react'
 import L from 'leaflet'
