@@ -1,0 +1,204 @@
+@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.625rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  }
+}
+
+/* Mobile app container */
+.mobile-container {
+  max-width: 430px;
+  margin: 0 auto;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading page animations */
+@keyframes pulse-bus {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.bus-icon-animate {
+  animation: pulse-bus 2s ease-in-out infinite;
+}
+
+/* Map styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Custom marker styles */
+.bus-marker {
+  background: #ef4444;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+}
+
+.location-marker {
+  background: #ef4444;
+  border-radius: 50% 50% 50% 0;
+  width: 36px;
+  height: 36px;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 3px solid white;
+}
+
+.location-marker::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.user-marker {
+  background: #3b82f6;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Bottom navigation */
+.bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  z-index: 1000;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 24px;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  opacity: 0.7;
+}
+
+.nav-item.active {
+  color: #ef4444;
+}
+
+.nav-item:not(.active) {
+  color: #9ca3af;
+}
+
+/* Route info panel */
+.route-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 0 0 16px 16px;
+  padding: 16px;
+  z-index: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Arrival panel */
+.arrival-panel {
+  position: absolute;
+  bottom: 80px;
+  left: 16px;
+  right: 16px;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  z-index: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
