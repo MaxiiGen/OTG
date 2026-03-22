@@ -270,15 +270,75 @@ const terminals = [
   },
 ]
 
+const ORS_API_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjRhODI5ZjcyY2M2MjQyZmE4Njk3YTkyZTg0MmNmZWYzIiwiaCI6Im11cm11cjY0In0='
+
+// Bus data type with route path
+type Bus = {
+  id: number
+  label: string
+  name: string
+  route: string
+  destination: string
+  position: [number, number]
+  etaMinutes: number
+  routePath?: [number, number][] // Array of coordinates along the actual road
+  routeIndex?: number // Current index in the route path
+  needsNewRoute?: boolean // Flag to indicate bus needs a new route fetched
+}
+
 // Bus data - each bus has a route and destination
-const allBuses = [
-  { id: 1, label: '1', name: 'bus 1', route: 'Davao-Cot', destination: 'Kabacan Terminal', position: [7.1000, 124.9000] as [number, number], eta: '15 mins' },
-  { id: 2, label: '2', name: 'bus 2', route: 'Gensan-CDO', destination: 'Cagayan de Oro Terminal', position: [6.5000, 125.0000] as [number, number], eta: '25 mins' },
-  { id: 3, label: '3', name: 'bus 3', route: 'Davao-Cot', destination: 'Kabacan Terminal', position: [7.0800, 124.8500] as [number, number], eta: '8 mins' },
-  { id: 4, label: '4', name: 'bus 4', route: 'Cotabato-Davao', destination: 'Davao City Terminal', position: [7.1500, 124.5000] as [number, number], eta: '12 mins' },
-  { id: 5, label: '5', name: 'bus 5', route: 'CDO-Davao', destination: 'Davao City Terminal', position: [7.5000, 125.2000] as [number, number], eta: '35 mins' },
-  { id: 6, label: '6', name: 'bus 6', route: 'Gensan-Cotabato', destination: 'Cotabato City Terminal', position: [6.6000, 124.8000] as [number, number], eta: '20 mins' },
+const initialBuses: Bus[] = [
+  { id: 1, label: '1', name: 'bus 1', route: 'Davao-Cot', destination: 'Kabacan Bus Terminal', position: [7.1000, 124.9000] as [number, number], etaMinutes: 15 },
+  { id: 2, label: '2', name: 'bus 2', route: 'Gensan-CDO', destination: 'Bulua Integrated Bus Terminal', position: [6.5000, 125.0000] as [number, number], etaMinutes: 25 },
+  { id: 3, label: '3', name: 'bus 3', route: 'Davao-Cot', destination: 'Kabacan Bus Terminal', position: [7.0800, 124.8500] as [number, number], etaMinutes: 8 },
+  { id: 4, label: '4', name: 'bus 4', route: 'Cotabato-Davao', destination: 'Ecoland Bus Terminal', position: [7.1500, 124.5000] as [number, number], etaMinutes: 12 },
+  { id: 5, label: '5', name: 'bus 5', route: 'CDO-Davao', destination: 'Ecoland Bus Terminal', position: [7.5000, 125.2000] as [number, number], etaMinutes: 35 },
+  { id: 6, label: '6', name: 'bus 6', route: 'Gensan-Cotabato', destination: 'Cotabato City Terminal', position: [6.6000, 124.8000] as [number, number], etaMinutes: 20 },
+  { id: 7, label: '7', name: 'bus 7', route: 'Butuan-Surigao', destination: 'Surigao City Terminal', position: [9.2000, 125.5000] as [number, number], etaMinutes: 18 },
+  { id: 8, label: '8', name: 'bus 8', route: 'Zamboanga-Pagadian', destination: 'Pagadian City Terminal', position: [7.2000, 122.5000] as [number, number], etaMinutes: 30 },
 ]
+
+// Fetch route from OpenRouteService
+async function fetchRoute(start: [number, number], end: [number, number]): Promise<[number, number][] | null> {
+  try {
+    console.log('Fetching route from', start, 'to', end)
+    const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+        'Authorization': ORS_API_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        coordinates: [[start[1], start[0]], [end[1], end[0]]], // ORS uses [lng, lat]
+        format: 'geojson'
+      })
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Route fetch failed:', response.status, response.statusText, errorText)
+      return null
+    }
+
+    const data = await response.json()
+    console.log('Route data received:', data)
+
+    if (!data.features || !data.features[0] || !data.features[0].geometry) {
+      console.error('Invalid route response format:', data)
+      return null
+    }
+
+    const coordinates = data.features[0].geometry.coordinates
+    console.log('Route has', coordinates.length, 'waypoints')
+
+    // Convert from [lng, lat] to [lat, lng]
+    return coordinates.map((coord: number[]) => [coord[1], coord[0]] as [number, number])
+  } catch (error) {
+    console.error('Error fetching route:', error)
+    return null
+  }
+}
 
 // Sample notifications
 const sampleNotifications = [
@@ -424,17 +484,25 @@ function NotificationsPanel({
 }
 
 // Terminal Popup Component
-function TerminalPopup({ 
-  terminal, 
-  onClose 
-}: { 
-  terminal: typeof terminals[0] | null; 
+function TerminalPopup({
+  terminal,
+  onClose,
+  buses
+}: {
+  terminal: typeof terminals[0] | null;
   onClose: () => void;
+  buses: Bus[];
 }) {
   if (!terminal) return null
 
   // Get buses approaching this terminal
-  const approachingBuses = allBuses.filter(bus => bus.destination === terminal.name)
+  const approachingBuses = buses.filter(bus => bus.destination === terminal.name)
+
+  // Format ETA display
+  const formatEta = (minutes: number) => {
+    if (minutes < 1) return 'Arriving'
+    return `${minutes} min${minutes !== 1 ? 's' : ''}`
+  }
 
   return (
     <>
@@ -467,7 +535,7 @@ function TerminalPopup({
                 <span className="terminal-bus-name">{bus.name}</span>
                 <span className="terminal-bus-route">Route: {bus.route}</span>
               </div>
-              <span className="terminal-bus-time">{bus.eta}</span>
+              <span className="terminal-bus-time">{formatEta(bus.etaMinutes)}</span>
             </div>
           ))
         )}
@@ -486,6 +554,42 @@ function MapView() {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [locationLoading, setLocationLoading] = useState(true)
   const [mapCenter, setMapCenter] = useState<[number, number]>([7.2, 124.8])
+  const [buses, setBuses] = useState<Bus[]>(initialBuses)
+
+  // Fetch initial routes for all buses
+  useEffect(() => {
+    const fetchInitialRoutes = async () => {
+      console.log('Fetching initial routes for', initialBuses.length, 'buses...')
+      const updatedBuses = await Promise.all(
+        initialBuses.map(async (bus) => {
+          const terminal = terminals.find(t => t.name === bus.destination)
+          if (!terminal) {
+            console.warn('No terminal found for bus', bus.id, 'destination:', bus.destination)
+            return bus
+          }
+
+          console.log(`Fetching route for bus ${bus.id} (${bus.name}) to ${terminal.name}`)
+          const routePath = await fetchRoute(bus.position, terminal.position)
+
+          if (routePath) {
+            console.log(`✓ Bus ${bus.id} route fetched successfully with ${routePath.length} waypoints`)
+          } else {
+            console.error(`✗ Bus ${bus.id} route fetch failed`)
+          }
+
+          return {
+            ...bus,
+            routePath: routePath || undefined,
+            routeIndex: 0
+          }
+        })
+      )
+      console.log('All routes fetched. Buses with routes:', updatedBuses.filter(b => b.routePath).length)
+      setBuses(updatedBuses)
+    }
+
+    fetchInitialRoutes()
+  }, [])
 
   // Get real-time user location
   useEffect(() => {
@@ -522,12 +626,175 @@ function MapView() {
     }
   }, [])
 
+  // Bus movement and ETA countdown
+  useEffect(() => {
+    let animationFrameId: number
+    let lastUpdateTime = Date.now()
+
+    // ETA countdown every second (1 second = 1 minute)
+    const etaInterval = setInterval(() => {
+      setBuses(prevBuses => {
+        const updatedBuses = prevBuses.map(bus => {
+          const terminal = terminals.find(t => t.name === bus.destination)
+          if (!terminal) return { ...bus, needsNewRoute: false }
+
+          // Calculate new ETA (decrease by 1 minute)
+          let newEtaMinutes = bus.etaMinutes - 1
+
+          // If bus arrived at terminal, mark it for new route
+          if (newEtaMinutes <= 0) {
+            const randomTerminal = terminals[Math.floor(Math.random() * terminals.length)]
+            return {
+              ...bus,
+              destination: randomTerminal.name,
+              position: terminal.position,
+              etaMinutes: Math.floor(Math.random() * 40) + 10,
+              needsNewRoute: true,
+              routePath: undefined,
+              routeIndex: 0
+            }
+          }
+
+          return {
+            ...bus,
+            etaMinutes: newEtaMinutes,
+            needsNewRoute: false
+          }
+        })
+
+        // Fetch new routes for buses that need them (async operation)
+        updatedBuses.forEach(async (bus, index) => {
+          if (bus.needsNewRoute) {
+            const terminal = terminals.find(t => t.name === bus.destination)
+            if (terminal) {
+              const newRoutePath = await fetchRoute(bus.position, terminal.position)
+              setBuses(currentBuses => {
+                const newBuses = [...currentBuses]
+                newBuses[index] = {
+                  ...newBuses[index],
+                  routePath: newRoutePath || undefined,
+                  routeIndex: 0,
+                  needsNewRoute: false
+                }
+                return newBuses
+              })
+            }
+          }
+        })
+
+        return updatedBuses
+      })
+    }, 1000) // Update ETA every second
+
+    // Smooth position updates at 60fps
+    const animate = () => {
+      const now = Date.now()
+      const deltaTime = now - lastUpdateTime
+
+      // Update every ~16ms (60fps)
+      if (deltaTime >= 16) {
+        setBuses(prevBuses => {
+          // Debug: Log buses with and without routes
+          const busesWithRoutes = prevBuses.filter(b => b.routePath && b.routePath.length > 0)
+          if (busesWithRoutes.length > 0) {
+            console.log(`Animating: ${busesWithRoutes.length}/${prevBuses.length} buses have routes`)
+          } else {
+            console.log('⚠️ No buses have route paths!')
+          }
+
+          return prevBuses.map(bus => {
+            const terminal = terminals.find(t => t.name === bus.destination)
+            if (!terminal || bus.etaMinutes <= 0) return bus
+
+            // If bus has a route path, follow it
+            if (bus.routePath && bus.routePath.length > 0) {
+              const currentIndex = bus.routeIndex || 0
+              const totalWaypoints = bus.routePath.length
+
+              if (currentIndex >= totalWaypoints - 1) {
+                // Already at destination
+                return bus
+              }
+
+              // Calculate how many waypoints to advance based on time
+              const waypointsPerSecond = totalWaypoints / (bus.etaMinutes * 60)
+              const waypointsToAdvance = waypointsPerSecond * (deltaTime / 1000)
+
+              const newIndex = Math.min(
+                currentIndex + waypointsToAdvance,
+                totalWaypoints - 1
+              )
+
+              // Interpolate between current and next waypoint for smooth movement
+              const floorIndex = Math.floor(newIndex)
+              const ceilIndex = Math.min(Math.ceil(newIndex), totalWaypoints - 1)
+              const fraction = newIndex - floorIndex
+
+              const currentWaypoint = bus.routePath[floorIndex]
+              const nextWaypoint = bus.routePath[ceilIndex]
+
+              const newPosition: [number, number] = [
+                currentWaypoint[0] + (nextWaypoint[0] - currentWaypoint[0]) * fraction,
+                currentWaypoint[1] + (nextWaypoint[1] - currentWaypoint[1]) * fraction
+              ]
+
+              return {
+                ...bus,
+                position: newPosition,
+                routeIndex: newIndex
+              }
+            } else {
+              console.log(`Bus ${bus.id} has no route path - using straight line`)
+              // Fallback to straight line movement if no route path
+              const [currentLat, currentLng] = bus.position
+              const [terminalLat, terminalLng] = terminal.position
+
+              const remainingSeconds = bus.etaMinutes * 60
+              const latDiff = terminalLat - currentLat
+              const lngDiff = terminalLng - currentLng
+
+              const stepLat = (latDiff / remainingSeconds) * (deltaTime / 1000)
+              const stepLng = (lngDiff / remainingSeconds) * (deltaTime / 1000)
+
+              const newPosition: [number, number] = [
+                currentLat + stepLat,
+                currentLng + stepLng
+              ]
+
+              return {
+                ...bus,
+                position: newPosition
+              }
+            }
+          })
+        })
+
+        lastUpdateTime = now
+      }
+
+      animationFrameId = requestAnimationFrame(animate)
+    }
+
+    animationFrameId = requestAnimationFrame(animate)
+
+    return () => {
+      clearInterval(etaInterval)
+      cancelAnimationFrame(animationFrameId)
+    }
+  }, [])
+
   const handleClearNotifications = () => {
     setNotifications([])
   }
 
   const handleTerminalClick = (terminal: typeof terminals[0]) => {
     setSelectedTerminal(terminal)
+  }
+
+  // Format ETA display
+  const formatEta = (minutes: number) => {
+    if (minutes < 1) return 'Arriving'
+    return `${minutes} min${minutes !== 1 ? 's' : ''}`
   }
 
   return (
@@ -548,7 +815,7 @@ function MapView() {
               <h3 className="route-title">OTG Bus Tracker</h3>
               <p className="route-subtitle">Real-time bus tracking</p>
               <p className="route-detail">{terminals.length} terminals available</p>
-              <p className="route-detail">{allBuses.length} buses active</p>
+              <p className="route-detail">{buses.length} buses active</p>
             </div>
             <button 
               className="close-btn"
@@ -596,10 +863,10 @@ function MapView() {
         ))}
 
         {/* Bus markers */}
-        {allBuses.map((bus) => (
-          <Marker 
-            key={bus.id} 
-            position={bus.position} 
+        {buses.map((bus) => (
+          <Marker
+            key={bus.id}
+            position={bus.position}
             icon={createBusIcon(bus.label)}
           >
             <Popup>
@@ -608,7 +875,7 @@ function MapView() {
                 <p>Route: {bus.route}</p>
                 <p>Destination: {bus.destination}</p>
                 <p style={{ color: '#10b981', fontWeight: 600, marginTop: '4px' }}>
-                  ETA: {bus.eta}
+                  ETA: {formatEta(bus.etaMinutes)}
                 </p>
               </div>
             </Popup>
@@ -643,11 +910,11 @@ function MapView() {
       <div className="arrival-panel">
         <h4 className="arrival-title">Nearby Buses</h4>
         <div className="arrival-list">
-          {allBuses.slice(0, 3).map((bus) => (
+          {buses.slice(0, 3).map((bus) => (
             <div key={bus.id} className="arrival-item">
               <span className="arrival-bus">{bus.name}</span>
               <span className="arrival-route">({bus.route}):</span>
-              <span className="arrival-time">{bus.eta}</span>
+              <span className="arrival-time">{formatEta(bus.etaMinutes)}</span>
             </div>
           ))}
         </div>
@@ -710,9 +977,10 @@ function MapView() {
       />
 
       {/* Terminal Popup */}
-      <TerminalPopup 
-        terminal={selectedTerminal} 
-        onClose={() => setSelectedTerminal(null)} 
+      <TerminalPopup
+        terminal={selectedTerminal}
+        onClose={() => setSelectedTerminal(null)}
+        buses={buses}
       />
     </div>
   )
