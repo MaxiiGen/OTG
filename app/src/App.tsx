@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import { 
-  Home, Menu, Bell, X, Navigation, 
+import {
+  Home, Menu, Bell, X, Navigation,
   HelpCircle, Shield, Settings,
-  ChevronRight, Bus, MapPin, Clock, Info
+  ChevronRight, Bus, MapPin, Info
 } from 'lucide-react'
 import L from 'leaflet'
 import './App.css'
@@ -373,19 +373,169 @@ function LoadingPage({ onComplete }: { onComplete: () => void }) {
   )
 }
 
+// FAQ Modal Component
+function FaqModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null
+
+  return (
+    <>
+      <div className="overlay" onClick={onClose} style={{ zIndex: 2000 }} />
+      <div className="terminal-popup" style={{ zIndex: 2001, maxHeight: '80vh', overflowY: 'auto' }}>
+        <div className="terminal-popup-header">
+          <div>
+            <h3 className="terminal-popup-title">FAQ & Help</h3>
+            <p className="terminal-popup-location">How to use OTG Bus Tracker</p>
+          </div>
+          <button className="close-btn" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <div style={{ padding: '16px 20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              🚌 How to track buses?
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+              Red circular markers with numbers represent buses. Tap on any bus to see its route, destination, and estimated time of arrival (ETA).
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              📍 How to check terminals?
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+              Red pin markers represent bus terminals. Tap on any terminal to see which buses are approaching and their ETAs.
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              🔵 What is the blue dot?
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+              The blue dot shows your current location. Tap the "Home" button at the bottom to center the map on your location.
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              🔔 How do notifications work?
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+              You'll receive notifications about bus arrivals, delays, and route updates. Check the notifications panel by tapping the bell icon.
+            </p>
+          </div>
+
+          <div>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              ℹ️ Need more help?
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+              The app updates in real-time, so you can see buses moving along their routes. ETAs update every minute to give you accurate arrival times.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// About Modal Component
+function AboutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null
+
+  return (
+    <>
+      <div className="overlay" onClick={onClose} style={{ zIndex: 2000 }} />
+      <div className="terminal-popup" style={{ zIndex: 2001, maxHeight: '80vh', overflowY: 'auto' }}>
+        <div className="terminal-popup-header">
+          <div>
+            <h3 className="terminal-popup-title">About OTG Bus Tracker</h3>
+            <p className="terminal-popup-location">Version 1.0</p>
+          </div>
+          <button className="close-btn" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <div style={{ padding: '16px 20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              📱 About the App
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+              OTG Bus Tracker is a real-time bus tracking application for Mindanao, Philippines. Track buses, view ETAs, and plan your trips across the island.
+            </p>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              🗺️ Coverage Area
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5', marginBottom: '8px' }}>
+              We cover 29 major bus terminals across Mindanao:
+            </p>
+            <ul style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6', marginLeft: '20px' }}>
+              <li>Davao Region (Region XI) - 5 terminals</li>
+              <li>SOCCSKSARGEN (Region XII) - 5 terminals</li>
+              <li>Northern Mindanao (Region X) - 7 terminals</li>
+              <li>Caraga (Region XIII) - 5 terminals</li>
+              <li>Zamboanga Peninsula (Region IX) - 5 terminals</li>
+              <li>BARMM - 2 terminals</li>
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              🚀 Features
+            </h4>
+            <ul style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6', marginLeft: '20px' }}>
+              <li>Real-time bus location tracking</li>
+              <li>Accurate ETA calculations</li>
+              <li>Terminal information and approaching buses</li>
+              <li>Your location on the map</li>
+              <li>Route-based bus movement along actual roads</li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              💡 Technology
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+              Powered by OpenStreetMap and OpenRouteService for accurate mapping and routing data.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // Menu Drawer Component
-function MenuDrawer({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+function MenuDrawer({
+  isOpen,
+  onClose,
+  onOpenFaq,
+  onOpenAbout
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onOpenFaq: () => void;
+  onOpenAbout: () => void;
+}) {
   type MenuItem = { icon: React.ElementType; label: string; action: () => void } | { divider: true }
-  
+
   const menuItems: MenuItem[] = [
-    { icon: MapPin, label: 'Saved Routes', action: () => {} },
-    { icon: Clock, label: 'Trip History', action: () => {} },
+    { icon: MapPin, label: 'Saved Routes', action: () => alert('Saved Routes feature coming soon!') },
     { divider: true },
-    { icon: Settings, label: 'Settings', action: () => {} },
-    { icon: HelpCircle, label: 'FAQ & Help', action: () => {} },
-    { icon: Info, label: 'About OTG', action: () => {} },
+    { icon: Settings, label: 'Settings', action: () => alert('Settings feature coming soon!') },
+    { icon: HelpCircle, label: 'FAQ & Help', action: onOpenFaq },
+    { icon: Info, label: 'About OTG', action: onOpenAbout },
     { divider: true },
-    { icon: Shield, label: 'Privacy Policy', action: () => {} },
+    { icon: Shield, label: 'Privacy Policy', action: () => alert('Privacy Policy: Your location data is only used for displaying your position on the map. We do not store or share your personal information.') },
   ]
 
   return (
@@ -549,6 +699,8 @@ function MapView() {
   const [showRoutePanel, setShowRoutePanel] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [faqOpen, setFaqOpen] = useState(false)
+  const [aboutOpen, setAboutOpen] = useState(false)
   const [notifications, setNotifications] = useState(sampleNotifications)
   const [selectedTerminal, setSelectedTerminal] = useState<typeof terminals[0] | null>(null)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
@@ -966,11 +1118,28 @@ function MapView() {
       </div>
 
       {/* Menu Drawer */}
-      <MenuDrawer isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+      <MenuDrawer
+        isOpen={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onOpenFaq={() => {
+          setMenuOpen(false)
+          setFaqOpen(true)
+        }}
+        onOpenAbout={() => {
+          setMenuOpen(false)
+          setAboutOpen(true)
+        }}
+      />
+
+      {/* FAQ Modal */}
+      <FaqModal isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
+
+      {/* About Modal */}
+      <AboutModal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
 
       {/* Notifications Panel */}
-      <NotificationsPanel 
-        isOpen={notificationsOpen} 
+      <NotificationsPanel
+        isOpen={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
         notifications={notifications}
         onClearAll={handleClearNotifications}
