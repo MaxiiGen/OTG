@@ -81,37 +81,192 @@ const userIcon = L.divIcon({
   iconAnchor: [10, 10],
 })
 
-// Terminal data with real locations
+// Terminal data with real locations - All Mindanao Terminals
 const terminals = [
-  { 
-    id: 1, 
-    name: 'Kabacan Terminal', 
-    location: 'Kabacan, North Cotabato',
-    position: [7.1065, 124.8293] as [number, number]
-  },
-  { 
-    id: 2, 
-    name: 'Davao City Terminal', 
+  // DAVAO REGION (Region XI)
+  {
+    id: 1,
+    name: 'Ecoland Bus Terminal',
     location: 'Davao City, Davao del Sur',
     position: [7.0707, 125.6087] as [number, number]
   },
-  { 
-    id: 3, 
-    name: 'General Santos Terminal', 
+  {
+    id: 2,
+    name: 'Tagum City Overland Terminal',
+    location: 'Tagum City, Davao del Norte',
+    position: [7.4478, 125.8078] as [number, number]
+  },
+  {
+    id: 3,
+    name: 'Panabo City Bus Terminal',
+    location: 'Panabo City, Davao del Norte',
+    position: [7.3072, 125.6836] as [number, number]
+  },
+  {
+    id: 4,
+    name: 'Digos City Terminal',
+    location: 'Digos City, Davao del Sur',
+    position: [6.7498, 125.3572] as [number, number]
+  },
+  {
+    id: 5,
+    name: 'Mati City Bus Terminal',
+    location: 'Mati City, Davao Oriental',
+    position: [6.9549, 126.2169] as [number, number]
+  },
+
+  // SOCCSKSARGEN (Region XII)
+  {
+    id: 6,
+    name: 'General Santos Bus Terminal',
     location: 'General Santos City, South Cotabato',
     position: [6.1164, 125.1716] as [number, number]
   },
-  { 
-    id: 4, 
-    name: 'Cagayan de Oro Terminal', 
+  {
+    id: 7,
+    name: 'Koronadal City Terminal',
+    location: 'Koronadal City, South Cotabato',
+    position: [6.5008, 124.8469] as [number, number]
+  },
+  {
+    id: 8,
+    name: 'Tacurong City Terminal',
+    location: 'Tacurong City, Sultan Kudarat',
+    position: [6.6903, 124.6767] as [number, number]
+  },
+  {
+    id: 9,
+    name: 'Kidapawan City Terminal',
+    location: 'Kidapawan City, North Cotabato',
+    position: [7.0089, 125.0892] as [number, number]
+  },
+  {
+    id: 10,
+    name: 'Kabacan Bus Terminal',
+    location: 'Kabacan, North Cotabato',
+    position: [7.1065, 124.8293] as [number, number]
+  },
+
+  // NORTHERN MINDANAO (Region X)
+  {
+    id: 11,
+    name: 'Bulua Integrated Bus Terminal',
     location: 'Cagayan de Oro City, Misamis Oriental',
     position: [8.4542, 124.6319] as [number, number]
   },
-  { 
-    id: 5, 
-    name: 'Cotabato City Terminal', 
+  {
+    id: 12,
+    name: 'Iligan Integrated Bus Terminal',
+    location: 'Iligan City, Lanao del Norte',
+    position: [8.2280, 124.2452] as [number, number]
+  },
+  {
+    id: 13,
+    name: 'Valencia City Terminal',
+    location: 'Valencia City, Bukidnon',
+    position: [7.9064, 125.0935] as [number, number]
+  },
+  {
+    id: 14,
+    name: 'Malaybalay City Terminal',
+    location: 'Malaybalay City, Bukidnon',
+    position: [8.1536, 125.1278] as [number, number]
+  },
+  {
+    id: 15,
+    name: 'Oroquieta City Terminal',
+    location: 'Oroquieta City, Misamis Occidental',
+    position: [8.4858, 123.8053] as [number, number]
+  },
+  {
+    id: 16,
+    name: 'Ozamiz City Bus Terminal',
+    location: 'Ozamiz City, Misamis Occidental',
+    position: [8.1481, 123.8417] as [number, number]
+  },
+  {
+    id: 17,
+    name: 'Gingoog City Terminal',
+    location: 'Gingoog City, Misamis Oriental',
+    position: [8.8267, 125.1019] as [number, number]
+  },
+
+  // CARAGA (Region XIII)
+  {
+    id: 18,
+    name: 'Butuan City Integrated Terminal',
+    location: 'Butuan City, Agusan del Norte',
+    position: [8.9475, 125.5406] as [number, number]
+  },
+  {
+    id: 19,
+    name: 'Surigao City Terminal',
+    location: 'Surigao City, Surigao del Norte',
+    position: [9.7869, 125.4919] as [number, number]
+  },
+  {
+    id: 20,
+    name: 'Tandag City Terminal',
+    location: 'Tandag City, Surigao del Sur',
+    position: [9.0783, 126.1989] as [number, number]
+  },
+  {
+    id: 21,
+    name: 'Bayugan City Terminal',
+    location: 'Bayugan City, Agusan del Sur',
+    position: [8.7117, 125.7444] as [number, number]
+  },
+  {
+    id: 22,
+    name: 'Bislig City Terminal',
+    location: 'Bislig City, Surigao del Sur',
+    position: [8.2061, 126.3219] as [number, number]
+  },
+
+  // ZAMBOANGA PENINSULA (Region IX)
+  {
+    id: 23,
+    name: 'Zamboanga City Bus Terminal',
+    location: 'Zamboanga City, Zamboanga del Sur',
+    position: [6.9214, 122.0790] as [number, number]
+  },
+  {
+    id: 24,
+    name: 'Pagadian City Terminal',
+    location: 'Pagadian City, Zamboanga del Sur',
+    position: [7.8256, 123.4353] as [number, number]
+  },
+  {
+    id: 25,
+    name: 'Dipolog City Terminal',
+    location: 'Dipolog City, Zamboanga del Norte',
+    position: [8.5889, 123.3419] as [number, number]
+  },
+  {
+    id: 26,
+    name: 'Dapitan City Terminal',
+    location: 'Dapitan City, Zamboanga del Norte',
+    position: [8.6542, 123.4242] as [number, number]
+  },
+  {
+    id: 27,
+    name: 'Ipil Municipal Terminal',
+    location: 'Ipil, Zamboanga Sibugay',
+    position: [7.7847, 122.5756] as [number, number]
+  },
+
+  // BARMM (Bangsamoro Autonomous Region)
+  {
+    id: 28,
+    name: 'Cotabato City Terminal',
     location: 'Cotabato City, Maguindanao',
     position: [7.2236, 124.2464] as [number, number]
+  },
+  {
+    id: 29,
+    name: 'Marawi City Terminal',
+    location: 'Marawi City, Lanao del Sur',
+    position: [8.0025, 124.2914] as [number, number]
   },
 ]
 
