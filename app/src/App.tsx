@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet'
 import {
   Home, Menu, Bell, X, Navigation,
   HelpCircle, Shield, Settings,
@@ -288,22 +288,32 @@ type Bus = {
   needsNewRoute?: boolean // Flag to indicate bus needs a new route fetched
 }
 
-// Bus data - each bus has a route and destination
+// Bus data - each bus has a route and destination (positioned on roads near terminals)
 const initialBuses: Bus[] = [
-  { id: 1, label: '1', name: 'Mindanao Star 1', company: 'Mindanao Star', color: '#ffffff', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [7.1000, 125.3000] as [number, number], etaMinutes: 15 },
-  { id: 2, label: '2', name: 'Mindanao Star 2', company: 'Mindanao Star', color: '#ffffff', route: 'Davao-Cotabato', destination: 'Cotabato City Terminal', position: [7.2000, 125.0000] as [number, number], etaMinutes: 25 },
-  { id: 3, label: '3', name: 'Davao Metro 1', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [7.1500, 125.2000] as [number, number], etaMinutes: 18 },
-  { id: 4, label: '4', name: 'Davao Metro 2', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Arakan', destination: 'Kidapawan City Terminal', position: [7.3000, 125.1000] as [number, number], etaMinutes: 22 },
-  { id: 5, label: '5', name: 'Yellow Bus 1', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Kidapawan-Koronadal', destination: 'Koronadal City Terminal', position: [6.8000, 125.0000] as [number, number], etaMinutes: 20 },
-  { id: 6, label: '6', name: 'Yellow Bus 2', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Koronadal-Kidapawan', destination: 'Kidapawan City Terminal', position: [6.6000, 124.9000] as [number, number], etaMinutes: 16 },
-  { id: 7, label: '7', name: 'Mindanao Star 3', company: 'Mindanao Star', color: '#ffffff', route: 'Cotabato-Davao', destination: 'Ecoland Bus Terminal', position: [7.1800, 124.7000] as [number, number], etaMinutes: 30 },
-  { id: 8, label: '8', name: 'Davao Metro 3', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Kidapawan-Davao', destination: 'Ecoland Bus Terminal', position: [7.2500, 125.1500] as [number, number], etaMinutes: 12 },
+  // Mindanao Star buses (white) - starting from roads near Ecoland Terminal Davao
+  { id: 1, label: '1', name: 'Mindanao Star 1', company: 'Mindanao Star', color: '#ffffff', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [7.0695, 125.6095] as [number, number], etaMinutes: 35 },
+  { id: 2, label: '2', name: 'Mindanao Star 2', company: 'Mindanao Star', color: '#ffffff', route: 'Davao-Cotabato', destination: 'Cotabato City Terminal', position: [7.0715, 125.6075] as [number, number], etaMinutes: 52 },
+  { id: 7, label: '7', name: 'Mindanao Star 3', company: 'Mindanao Star', color: '#ffffff', route: 'Cotabato-Davao', destination: 'Ecoland Bus Terminal', position: [7.2225, 124.2455] as [number, number], etaMinutes: 48 },
+
+  // Davao Metro Shuttle buses (red) - starting from roads near terminals
+  { id: 3, label: '3', name: 'Davao Metro 1', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [7.0720, 125.6080] as [number, number], etaMinutes: 38 },
+  { id: 4, label: '4', name: 'Davao Metro 2', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Kidapawan-Davao', destination: 'Ecoland Bus Terminal', position: [7.0095, 125.0885] as [number, number], etaMinutes: 42 },
+  { id: 8, label: '8', name: 'Davao Metro 3', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Arakan', destination: 'Kidapawan City Terminal', position: [7.0700, 125.6100] as [number, number], etaMinutes: 45 },
+
+  // Yellow Bus Liners (yellow) - operating Kidapawan-Koronadal route on main roads
+  { id: 5, label: '5', name: 'Yellow Bus 1', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Kidapawan-Koronadal', destination: 'Koronadal City Terminal', position: [7.0085, 125.0885] as [number, number], etaMinutes: 28 },
+  { id: 6, label: '6', name: 'Yellow Bus 2', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Koronadal-Kidapawan', destination: 'Kidapawan City Terminal', position: [6.5015, 124.8475] as [number, number], etaMinutes: 32 },
 ]
 
 // Fetch route from OpenRouteService
 async function fetchRoute(start: [number, number], end: [number, number]): Promise<[number, number][] | null> {
   try {
-    console.log('Fetching route from', start, 'to', end)
+    console.log('🔄 Fetching route from ORS API:', {
+      start: `${start[0]}, ${start[1]}`,
+      end: `${end[0]}, ${end[1]}`,
+      coordinates: [[start[1], start[0]], [end[1], end[0]]]
+    })
+
     const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
       method: 'POST',
       headers: {
@@ -313,31 +323,70 @@ async function fetchRoute(start: [number, number], end: [number, number]): Promi
       },
       body: JSON.stringify({
         coordinates: [[start[1], start[0]], [end[1], end[0]]], // ORS uses [lng, lat]
-        format: 'geojson'
+        format: 'geojson',
+        geometry_simplify: false,  // Get more detailed route points
+        continue_straight: false,  // Allow turns for more accurate routing
+        options: {
+          avoid_features: [],
+          profile_params: {
+            restrictions: {
+              // No special restrictions to ensure natural road following
+            }
+          }
+        }
       })
     })
 
+    console.log('📡 ORS API Response status:', response.status, response.statusText)
+
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Route fetch failed:', response.status, response.statusText, errorText)
+      console.error('❌ Route fetch failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText
+      })
       return null
     }
 
     const data = await response.json()
-    console.log('Route data received:', data)
+    console.log('📊 Raw route data received:', data)
 
     if (!data.features || !data.features[0] || !data.features[0].geometry) {
-      console.error('Invalid route response format:', data)
+      console.error('❌ Invalid route response format:', data)
       return null
     }
 
     const coordinates = data.features[0].geometry.coordinates
-    console.log('Route has', coordinates.length, 'waypoints')
+    console.log('🛣️ Route coordinates:', {
+      total_waypoints: coordinates.length,
+      first_point: coordinates[0],
+      last_point: coordinates[coordinates.length - 1]
+    })
 
-    // Convert from [lng, lat] to [lat, lng]
-    return coordinates.map((coord: number[]) => [coord[1], coord[0]] as [number, number])
+    // Convert from [lng, lat] to [lat, lng] and ensure we have enough points
+    const routePoints = coordinates.map((coord: number[]) => [coord[1], coord[0]] as [number, number])
+
+    // If we have very few points, add interpolated points for smoother movement
+    if (routePoints.length < 10) {
+      console.log('🔄 Interpolating points for smoother movement...')
+      const interpolatedPoints: [number, number][] = []
+      for (let i = 0; i < routePoints.length - 1; i++) {
+        interpolatedPoints.push(routePoints[i])
+        // Add a midpoint between each pair of coordinates
+        const midLat = (routePoints[i][0] + routePoints[i + 1][0]) / 2
+        const midLng = (routePoints[i][1] + routePoints[i + 1][1]) / 2
+        interpolatedPoints.push([midLat, midLng])
+      }
+      interpolatedPoints.push(routePoints[routePoints.length - 1])
+      console.log('✅ Route interpolated:', interpolatedPoints.length, 'total points')
+      return interpolatedPoints
+    }
+
+    console.log('✅ Route fetched successfully:', routePoints.length, 'waypoints')
+    return routePoints
   } catch (error) {
-    console.error('Error fetching route:', error)
+    console.error('❌ Error fetching route:', error)
     return null
   }
 }
@@ -718,28 +767,28 @@ function MapView() {
   const [selectedTerminal, setSelectedTerminal] = useState<typeof terminals[0] | null>(null)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [locationLoading, setLocationLoading] = useState(true)
-  const [mapCenter, setMapCenter] = useState<[number, number]>([7.2, 124.8])
+  const [mapCenter, setMapCenter] = useState<[number, number]>([7.0707, 125.6087]) // Davao City (Ecoland)
   const [buses, setBuses] = useState<Bus[]>(initialBuses)
 
   // Fetch initial routes for all buses
   useEffect(() => {
     const fetchInitialRoutes = async () => {
-      console.log('Fetching initial routes for', initialBuses.length, 'buses...')
+      console.log('🚌 Fetching initial routes for', initialBuses.length, 'buses...')
       const updatedBuses = await Promise.all(
         initialBuses.map(async (bus) => {
           const terminal = terminals.find(t => t.name === bus.destination)
           if (!terminal) {
-            console.warn('No terminal found for bus', bus.id, 'destination:', bus.destination)
+            console.warn('⚠️ No terminal found for bus', bus.id, 'destination:', bus.destination)
             return bus
           }
 
-          console.log(`Fetching route for bus ${bus.id} (${bus.name}) to ${terminal.name}`)
+          console.log(`🔍 Fetching route for bus ${bus.id} (${bus.name}) from [${bus.position[0]}, ${bus.position[1]}] to ${terminal.name} [${terminal.position[0]}, ${terminal.position[1]}]`)
           const routePath = await fetchRoute(bus.position, terminal.position)
 
-          if (routePath) {
-            console.log(`✓ Bus ${bus.id} route fetched successfully with ${routePath.length} waypoints`)
+          if (routePath && routePath.length > 0) {
+            console.log(`✅ Bus ${bus.id} route fetched successfully with ${routePath.length} waypoints`)
           } else {
-            console.error(`✗ Bus ${bus.id} route fetch failed`)
+            console.error(`❌ Bus ${bus.id} route fetch failed or returned empty route`)
           }
 
           return {
@@ -749,7 +798,20 @@ function MapView() {
           }
         })
       )
-      console.log('All routes fetched. Buses with routes:', updatedBuses.filter(b => b.routePath).length)
+
+      const busesWithRoutes = updatedBuses.filter(b => b.routePath)
+      const busesWithoutRoutes = updatedBuses.filter(b => !b.routePath)
+
+      console.log('🎯 Route fetching complete:', {
+        total_buses: updatedBuses.length,
+        buses_with_routes: busesWithRoutes.length,
+        buses_without_routes: busesWithoutRoutes.length
+      })
+
+      if (busesWithoutRoutes.length > 0) {
+        console.warn('⚠️ Buses without routes:', busesWithoutRoutes.map(b => `${b.id}:${b.name}`))
+      }
+
       setBuses(updatedBuses)
     }
 
@@ -791,29 +853,96 @@ function MapView() {
     }
   }, [])
 
+  // Helper function to get road-aligned position near a terminal
+  const getRoadPosition = (terminalName: string): [number, number] => {
+    // Return positions on roads near terminals instead of exact terminal centers
+    switch (terminalName) {
+      case 'Ecoland Bus Terminal':
+        return [7.0695, 125.6095] // Road position near Ecoland
+      case 'Kidapawan City Terminal':
+        return [7.0095, 125.0885] // Road position near Kidapawan terminal
+      case 'Cotabato City Terminal':
+        return [7.2225, 124.2455] // Road position near Cotabato terminal
+      case 'Koronadal City Terminal':
+        return [6.5015, 124.8475] // Road position near Koronadal terminal
+      default:
+        // For other terminals, offset slightly from center to be on nearby roads
+        const terminal = terminals.find(t => t.name === terminalName)
+        if (terminal) {
+          return [terminal.position[0] + 0.001, terminal.position[1] + 0.001]
+        }
+        return [7.0695, 125.6095] // Default fallback
+    }
+  }
+
+  // Helper function to determine next destination for a bus based on its company and current location
+  const getNextDestination = (bus: Bus, currentTerminalName: string): { destination: string, route: string, etaMinutes: number } => {
+    const ecoland = 'Ecoland Bus Terminal'
+    const kidapawan = 'Kidapawan City Terminal'
+    const cotabato = 'Cotabato City Terminal'
+    const koronadal = 'Koronadal City Terminal'
+
+    if (bus.company === 'Mindanao Star') {
+      if (currentTerminalName === ecoland) {
+        // From Davao, go to either Kidapawan or Cotabato
+        const destinations = [
+          { destination: kidapawan, route: 'Davao-Kidapawan', etaMinutes: 35 },
+          { destination: cotabato, route: 'Davao-Cotabato', etaMinutes: 52 }
+        ]
+        return destinations[Math.floor(Math.random() * destinations.length)]
+      } else {
+        // Return to Davao from anywhere
+        return {
+          destination: ecoland,
+          route: currentTerminalName === kidapawan ? 'Kidapawan-Davao' : 'Cotabato-Davao',
+          etaMinutes: currentTerminalName === kidapawan ? 38 : 48
+        }
+      }
+    } else if (bus.company === 'Davao Metro Shuttle') {
+      // Davao Metro goes between Davao and Kidapawan
+      if (currentTerminalName === ecoland) {
+        return { destination: kidapawan, route: 'Davao-Kidapawan', etaMinutes: 40 }
+      } else {
+        return { destination: ecoland, route: 'Kidapawan-Davao', etaMinutes: 42 }
+      }
+    } else if (bus.company === 'Yellow Bus Liners') {
+      // Yellow Bus goes between Kidapawan and Koronadal
+      if (currentTerminalName === kidapawan) {
+        return { destination: koronadal, route: 'Kidapawan-Koronadal', etaMinutes: 30 }
+      } else {
+        return { destination: kidapawan, route: 'Koronadal-Kidapawan', etaMinutes: 32 }
+      }
+    }
+
+    // Fallback
+    return { destination: ecoland, route: 'Return', etaMinutes: 30 }
+  }
+
   // Bus movement and ETA countdown
   useEffect(() => {
     let animationFrameId: number
     let lastUpdateTime = Date.now()
 
-    // ETA countdown every second (1 second = 1 minute)
+    // ETA countdown every 10 seconds (10 seconds real time = 1 minute bus time)
     const etaInterval = setInterval(() => {
       setBuses(prevBuses => {
         const updatedBuses = prevBuses.map(bus => {
           const terminal = terminals.find(t => t.name === bus.destination)
           if (!terminal) return { ...bus, needsNewRoute: false }
 
-          // Calculate new ETA (decrease by 1 minute)
+          // Calculate new ETA (decrease by 1 minute every 10 seconds)
           let newEtaMinutes = bus.etaMinutes - 1
 
           // If bus arrived at terminal, mark it for new route
           if (newEtaMinutes <= 0) {
-            const randomTerminal = terminals[Math.floor(Math.random() * terminals.length)]
+            const nextRoute = getNextDestination(bus, terminal.name)
+            const roadPosition = getRoadPosition(terminal.name)
             return {
               ...bus,
-              destination: randomTerminal.name,
-              position: terminal.position,
-              etaMinutes: Math.floor(Math.random() * 40) + 10,
+              destination: nextRoute.destination,
+              route: nextRoute.route,
+              position: roadPosition, // Use road position instead of terminal center
+              etaMinutes: nextRoute.etaMinutes,
               needsNewRoute: true,
               routePath: undefined,
               routeIndex: 0
@@ -835,11 +964,13 @@ function MapView() {
               const newRoutePath = await fetchRoute(bus.position, terminal.position)
               setBuses(currentBuses => {
                 const newBuses = [...currentBuses]
-                newBuses[index] = {
-                  ...newBuses[index],
-                  routePath: newRoutePath || undefined,
-                  routeIndex: 0,
-                  needsNewRoute: false
+                if (newBuses[index] && newBuses[index].id === bus.id) {
+                  newBuses[index] = {
+                    ...newBuses[index],
+                    routePath: newRoutePath || undefined,
+                    routeIndex: 0,
+                    needsNewRoute: false
+                  }
                 }
                 return newBuses
               })
@@ -849,7 +980,7 @@ function MapView() {
 
         return updatedBuses
       })
-    }, 1000) // Update ETA every second
+    }, 10000) // Update ETA every 10 seconds
 
     // Smooth position updates at 60fps
     const animate = () => {
@@ -858,81 +989,88 @@ function MapView() {
 
       // Update every ~16ms (60fps)
       if (deltaTime >= 16) {
-        setBuses(prevBuses => {
-          // Debug: Log buses with and without routes
-          const busesWithRoutes = prevBuses.filter(b => b.routePath && b.routePath.length > 0)
-          if (busesWithRoutes.length > 0) {
-            console.log(`Animating: ${busesWithRoutes.length}/${prevBuses.length} buses have routes`)
-          } else {
-            console.log('⚠️ No buses have route paths!')
-          }
+        setBuses(prevBuses => prevBuses.map(bus => {
+          const terminal = terminals.find(t => t.name === bus.destination)
+          if (!terminal || bus.etaMinutes <= 0 || bus.needsNewRoute) return bus
 
-          return prevBuses.map(bus => {
-            const terminal = terminals.find(t => t.name === bus.destination)
-            if (!terminal || bus.etaMinutes <= 0) return bus
+          // If bus has a route path, follow it
+          if (bus.routePath && bus.routePath.length > 0) {
+            const currentIndex = bus.routeIndex || 0
+            const totalWaypoints = bus.routePath.length
 
-            // If bus has a route path, follow it
-            if (bus.routePath && bus.routePath.length > 0) {
-              const currentIndex = bus.routeIndex || 0
-              const totalWaypoints = bus.routePath.length
-
-              if (currentIndex >= totalWaypoints - 1) {
-                // Already at destination
-                return bus
-              }
-
-              // Calculate how many waypoints to advance based on time
-              const waypointsPerSecond = totalWaypoints / (bus.etaMinutes * 60)
-              const waypointsToAdvance = waypointsPerSecond * (deltaTime / 1000)
-
-              const newIndex = Math.min(
-                currentIndex + waypointsToAdvance,
-                totalWaypoints - 1
-              )
-
-              // Interpolate between current and next waypoint for smooth movement
-              const floorIndex = Math.floor(newIndex)
-              const ceilIndex = Math.min(Math.ceil(newIndex), totalWaypoints - 1)
-              const fraction = newIndex - floorIndex
-
-              const currentWaypoint = bus.routePath[floorIndex]
-              const nextWaypoint = bus.routePath[ceilIndex]
-
-              const newPosition: [number, number] = [
-                currentWaypoint[0] + (nextWaypoint[0] - currentWaypoint[0]) * fraction,
-                currentWaypoint[1] + (nextWaypoint[1] - currentWaypoint[1]) * fraction
-              ]
-
-              return {
-                ...bus,
-                position: newPosition,
-                routeIndex: newIndex
-              }
-            } else {
-              console.log(`Bus ${bus.id} has no route path - using straight line`)
-              // Fallback to straight line movement if no route path
-              const [currentLat, currentLng] = bus.position
-              const [terminalLat, terminalLng] = terminal.position
-
-              const remainingSeconds = bus.etaMinutes * 60
-              const latDiff = terminalLat - currentLat
-              const lngDiff = terminalLng - currentLng
-
-              const stepLat = (latDiff / remainingSeconds) * (deltaTime / 1000)
-              const stepLng = (lngDiff / remainingSeconds) * (deltaTime / 1000)
-
-              const newPosition: [number, number] = [
-                currentLat + stepLat,
-                currentLng + stepLng
-              ]
-
-              return {
-                ...bus,
-                position: newPosition
-              }
+            if (currentIndex >= totalWaypoints - 1) {
+              // Already at destination
+              return bus
             }
-          })
-        })
+
+            // Calculate progress based on remaining ETA
+            // Since ETA decreases by 1 minute every 10 seconds, the bus should complete the route in (etaMinutes * 10) seconds
+            const totalJourneyTimeSeconds = bus.etaMinutes * 10
+            const progressPerSecond = 1 / totalJourneyTimeSeconds
+            const progressIncrement = progressPerSecond * (deltaTime / 1000)
+
+            // Calculate current progress (0 to 1)
+            const currentProgress = currentIndex / (totalWaypoints - 1)
+            const newProgress = Math.min(currentProgress + progressIncrement, 1)
+
+            // Convert progress to waypoint index
+            const newIndex = newProgress * (totalWaypoints - 1)
+
+            // Interpolate between current and next waypoint for smooth movement
+            const floorIndex = Math.floor(newIndex)
+            const ceilIndex = Math.min(Math.ceil(newIndex), totalWaypoints - 1)
+            const fraction = newIndex - floorIndex
+
+            const currentWaypoint = bus.routePath[floorIndex]
+            const nextWaypoint = bus.routePath[ceilIndex]
+
+            const newPosition: [number, number] = [
+              currentWaypoint[0] + (nextWaypoint[0] - currentWaypoint[0]) * fraction,
+              currentWaypoint[1] + (nextWaypoint[1] - currentWaypoint[1]) * fraction
+            ]
+
+            // Debug log every 100 frames (about once per second at 60fps)
+            if (Math.random() < 0.01) {
+              console.log(`🚌 Bus ${bus.id} movement:`, {
+                current_waypoint: floorIndex,
+                total_waypoints: totalWaypoints,
+                progress: Math.round(newProgress * 100) + '%',
+                position: `[${newPosition[0].toFixed(4)}, ${newPosition[1].toFixed(4)}]`,
+                eta_remaining: bus.etaMinutes + 'min'
+              })
+            }
+
+            return {
+              ...bus,
+              position: newPosition,
+              routeIndex: newIndex
+            }
+          } else {
+            // Fallback to straight line movement if no route path
+            console.warn(`⚠️ Bus ${bus.id} (${bus.name}) falling back to straight-line movement - no route path available`)
+
+            const [currentLat, currentLng] = bus.position
+            const [terminalLat, terminalLng] = terminal.position
+
+            // Move directly towards destination based on remaining ETA (10 seconds per minute)
+            const remainingSeconds = bus.etaMinutes * 10
+            const latDiff = terminalLat - currentLat
+            const lngDiff = terminalLng - currentLng
+
+            const stepLat = (latDiff / remainingSeconds) * (deltaTime / 1000)
+            const stepLng = (lngDiff / remainingSeconds) * (deltaTime / 1000)
+
+            const newPosition: [number, number] = [
+              currentLat + stepLat,
+              currentLng + stepLng
+            ]
+
+            return {
+              ...bus,
+              position: newPosition
+            }
+          }
+        }))
 
         lastUpdateTime = now
       }
@@ -1063,6 +1201,22 @@ function MapView() {
             </Popup>
           </Marker>
         ))}
+
+        {/* Route paths */}
+        {buses.map((bus) =>
+          bus.routePath && bus.routePath.length > 0 ? (
+            <Polyline
+              key={`route-${bus.id}`}
+              positions={bus.routePath}
+              pathOptions={{
+                color: bus.color === '#ffffff' ? '#ff6b6b' : bus.color,
+                weight: 4,
+                opacity: 0.7,
+                dashArray: '10, 10'
+              }}
+            />
+          ) : null
+        )}
 
         {/* User position marker */}
         {userLocation && (
