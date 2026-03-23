@@ -631,6 +631,680 @@ function FaqModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void })
   )
 }
 
+// Add Route Modal Component
+function AddRouteModal({
+  isOpen,
+  onClose,
+  onAddRoute
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onAddRoute: (route: { name: string; from: string; to: string; favorite: boolean }) => void;
+}) {
+  const [routeName, setRouteName] = useState('')
+  const [fromTerminal, setFromTerminal] = useState('')
+  const [toTerminal, setToTerminal] = useState('')
+  const [isFavorite, setIsFavorite] = useState(false)
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (routeName.trim() && fromTerminal && toTerminal && fromTerminal !== toTerminal) {
+      onAddRoute({
+        name: routeName.trim(),
+        from: fromTerminal,
+        to: toTerminal,
+        favorite: isFavorite
+      })
+      // Reset form
+      setRouteName('')
+      setFromTerminal('')
+      setToTerminal('')
+      setIsFavorite(false)
+      onClose()
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <>
+      <div className="overlay" onClick={onClose} style={{ zIndex: 3000 }} />
+      <div className="terminal-popup" style={{ zIndex: 3001, maxHeight: '80vh', overflowY: 'auto' }}>
+        <div className="terminal-popup-header">
+          <div>
+            <h3 className="terminal-popup-title">Add New Route</h3>
+            <p className="terminal-popup-location">Create a new saved route</p>
+          </div>
+          <button className="close-btn" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ padding: '16px 20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              Route Name
+            </label>
+            <input
+              type="text"
+              value={routeName}
+              onChange={(e) => setRouteName(e.target.value)}
+              placeholder="e.g., Home to Work, Weekend Trip"
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                boxSizing: 'border-box'
+              }}
+              required
+            />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              From Terminal
+            </label>
+            <select
+              value={fromTerminal}
+              onChange={(e) => setFromTerminal(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                boxSizing: 'border-box'
+              }}
+              required
+            >
+              <option value="">Select departure terminal...</option>
+              {terminals.map((terminal) => (
+                <option key={terminal.id} value={terminal.name}>
+                  {terminal.name} - {terminal.location}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              To Terminal
+            </label>
+            <select
+              value={toTerminal}
+              onChange={(e) => setToTerminal(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                boxSizing: 'border-box'
+              }}
+              required
+            >
+              <option value="">Select destination terminal...</option>
+              {terminals
+                .filter((terminal) => terminal.name !== fromTerminal)
+                .map((terminal) => (
+                <option key={terminal.id} value={terminal.name}>
+                  {terminal.name} - {terminal.location}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '14px',
+              color: '#374151',
+              cursor: 'pointer'
+            }}>
+              <input
+                type="checkbox"
+                checked={isFavorite}
+                onChange={(e) => setIsFavorite(e.target.checked)}
+                style={{ margin: 0 }}
+              />
+              Mark as favorite ⭐
+            </label>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                flex: 1,
+                background: 'white',
+                color: '#374151',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                padding: '12px',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!routeName.trim() || !fromTerminal || !toTerminal || fromTerminal === toTerminal}
+              style={{
+                flex: 1,
+                background: (!routeName.trim() || !fromTerminal || !toTerminal || fromTerminal === toTerminal)
+                  ? '#d1d5db' : '#f92f2f',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: (!routeName.trim() || !fromTerminal || !toTerminal || fromTerminal === toTerminal)
+                  ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Add Route
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
+  )
+}
+
+// Saved Routes Modal Component
+function SavedRoutesModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [savedRoutes, setSavedRoutes] = useState([
+    { id: 1, name: 'Home to Work', from: 'Ecoland Bus Terminal', to: 'Kidapawan City Terminal', favorite: true },
+    { id: 2, name: 'Weekend Trip', from: 'Kidapawan City Terminal', to: 'Cotabato City Terminal', favorite: false },
+  ])
+  const [addRouteModalOpen, setAddRouteModalOpen] = useState(false)
+
+  const handleDeleteRoute = (id: number) => {
+    setSavedRoutes(routes => routes.filter(route => route.id !== id))
+  }
+
+  const handleToggleFavorite = (id: number) => {
+    setSavedRoutes(routes => routes.map(route =>
+      route.id === id ? { ...route, favorite: !route.favorite } : route
+    ))
+  }
+
+  const handleAddRoute = (newRoute: { name: string; from: string; to: string; favorite: boolean }) => {
+    const newId = Math.max(...savedRoutes.map(r => r.id), 0) + 1
+    setSavedRoutes(routes => [...routes, { ...newRoute, id: newId }])
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <>
+      <div className="overlay" onClick={onClose} style={{ zIndex: 2000 }} />
+      <div className="terminal-popup" style={{ zIndex: 2001, maxHeight: '80vh', overflowY: 'auto' }}>
+        <div className="terminal-popup-header">
+          <div>
+            <h3 className="terminal-popup-title">Saved Routes</h3>
+            <p className="terminal-popup-location">Your favorite bus routes</p>
+          </div>
+          <button className="close-btn" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <div style={{ padding: '16px 20px' }}>
+          {savedRoutes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 20px', color: '#9ca3af' }}>
+              <MapPin size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
+              <p>No saved routes yet</p>
+              <p style={{ fontSize: '13px', marginTop: '4px' }}>Save your frequently used routes for quick access</p>
+            </div>
+          ) : (
+            savedRoutes.map((route) => (
+              <div key={route.id} style={{
+                background: 'white',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                      <h4 style={{ margin: 0, fontSize: '16px', color: '#1f2937' }}>{route.name}</h4>
+                      {route.favorite && <span style={{ color: '#f59e0b' }}>⭐</span>}
+                    </div>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#6b7280', lineHeight: '1.5' }}>
+                      📍 {route.from} → {route.to}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginLeft: '12px' }}>
+                    <button
+                      onClick={() => handleToggleFavorite(route.id)}
+                      style={{
+                        background: route.favorite ? '#fef3c7' : 'transparent',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        cursor: 'pointer',
+                        fontSize: '14px'
+                      }}
+                    >
+                      {route.favorite ? '⭐' : '☆'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteRoute(route.id)}
+                      style={{
+                        background: '#fef2f2',
+                        border: '1px solid #fecaca',
+                        borderRadius: '8px',
+                        padding: '8px',
+                        cursor: 'pointer',
+                        color: '#dc2626'
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+
+          <button
+            onClick={() => setAddRouteModalOpen(true)}
+            style={{
+            width: '100%',
+            background: '#f92f2f',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            marginTop: '16px'
+          }}>
+            + Add New Route
+          </button>
+        </div>
+      </div>
+
+      {/* Add Route Modal */}
+      <AddRouteModal
+        isOpen={addRouteModalOpen}
+        onClose={() => setAddRouteModalOpen(false)}
+        onAddRoute={handleAddRoute}
+      />
+    </>
+  )
+}
+
+// Settings Modal Component
+function SettingsModal({
+  isOpen,
+  onClose,
+  darkMode,
+  setDarkMode
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  darkMode: boolean;
+  setDarkMode: (value: boolean) => void;
+}) {
+  const [notifications, setNotifications] = useState(true)
+  const [locationSharing, setLocationSharing] = useState(true)
+  const [autoRefresh, setAutoRefresh] = useState(true)
+
+  if (!isOpen) return null
+
+  return (
+    <>
+      <div className="overlay" onClick={onClose} style={{ zIndex: 2000 }} />
+      <div className="terminal-popup" style={{ zIndex: 2001, maxHeight: '80vh', overflowY: 'auto' }}>
+        <div className="terminal-popup-header">
+          <div>
+            <h3 className="terminal-popup-title">Settings</h3>
+            <p className="terminal-popup-location">Customize your app experience</p>
+          </div>
+          <button className="close-btn" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <div style={{ padding: '16px 20px' }}>
+          <div style={{ marginBottom: '28px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>
+              🔔 Notifications
+            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <span style={{ fontSize: '14px', color: '#374151' }}>Push Notifications</span>
+              <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                <input
+                  type="checkbox"
+                  checked={notifications}
+                  onChange={(e) => setNotifications(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute',
+                  cursor: 'pointer',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: notifications ? '#f92f2f' : '#ccc',
+                  borderRadius: '24px',
+                  transition: '0.4s',
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    content: '""',
+                    height: '18px',
+                    width: '18px',
+                    left: notifications ? '23px' : '3px',
+                    bottom: '3px',
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    transition: '0.4s'
+                  }} />
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '28px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>
+              📍 Location & Privacy
+            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <span style={{ fontSize: '14px', color: '#374151' }}>Share Location</span>
+              <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                <input
+                  type="checkbox"
+                  checked={locationSharing}
+                  onChange={(e) => setLocationSharing(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute',
+                  cursor: 'pointer',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: locationSharing ? '#f92f2f' : '#ccc',
+                  borderRadius: '24px',
+                  transition: '0.4s',
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    content: '""',
+                    height: '18px',
+                    width: '18px',
+                    left: locationSharing ? '23px' : '3px',
+                    bottom: '3px',
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    transition: '0.4s'
+                  }} />
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '28px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>
+              🔄 App Behavior
+            </h4>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <span style={{ fontSize: '14px', color: '#374151' }}>Auto-refresh Data</span>
+              <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                <input
+                  type="checkbox"
+                  checked={autoRefresh}
+                  onChange={(e) => setAutoRefresh(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute',
+                  cursor: 'pointer',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: autoRefresh ? '#f92f2f' : '#ccc',
+                  borderRadius: '24px',
+                  transition: '0.4s',
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    content: '""',
+                    height: '18px',
+                    width: '18px',
+                    left: autoRefresh ? '23px' : '3px',
+                    bottom: '3px',
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    transition: '0.4s'
+                  }} />
+                </span>
+              </label>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <span style={{ fontSize: '14px', color: '#374151' }}>Dark Mode</span>
+              <label style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                <input
+                  type="checkbox"
+                  checked={darkMode}
+                  onChange={(e) => setDarkMode(e.target.checked)}
+                  style={{ opacity: 0, width: 0, height: 0 }}
+                />
+                <span style={{
+                  position: 'absolute',
+                  cursor: 'pointer',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: darkMode ? '#f92f2f' : '#ccc',
+                  borderRadius: '24px',
+                  transition: '0.4s',
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    content: '""',
+                    height: '18px',
+                    width: '18px',
+                    left: darkMode ? '23px' : '3px',
+                    bottom: '3px',
+                    backgroundColor: 'white',
+                    borderRadius: '50%',
+                    transition: '0.4s'
+                  }} />
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>
+              💾 Data Management
+            </h4>
+            <button style={{
+              width: '100%',
+              background: 'white',
+              color: '#374151',
+              border: '1px solid #d1d5db',
+              borderRadius: '12px',
+              padding: '12px',
+              fontSize: '14px',
+              cursor: 'pointer',
+              marginBottom: '8px'
+            }}>
+              Clear Cache
+            </button>
+            <button style={{
+              width: '100%',
+              background: '#fef2f2',
+              color: '#dc2626',
+              border: '1px solid #fecaca',
+              borderRadius: '12px',
+              padding: '12px',
+              fontSize: '14px',
+              cursor: 'pointer'
+            }}>
+              Reset All Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// Privacy Policy Modal Component
+function PrivacyPolicyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  if (!isOpen) return null
+
+  return (
+    <>
+      <div className="overlay" onClick={onClose} style={{ zIndex: 2000 }} />
+      <div className="terminal-popup" style={{ zIndex: 2001, maxHeight: '80vh', overflowY: 'auto' }}>
+        <div className="terminal-popup-header">
+          <div>
+            <h3 className="terminal-popup-title">Privacy Policy</h3>
+            <p className="terminal-popup-location">Your data protection & privacy rights</p>
+          </div>
+          <button className="close-btn" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
+
+        <div style={{ padding: '16px 20px' }}>
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              📍 Location Data
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5', marginBottom: '12px' }}>
+              Your location data is only used for displaying your position on the map and finding nearby buses. We do not store, share, or transmit your location data to any third parties.
+            </p>
+            <ul style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6', marginLeft: '20px' }}>
+              <li>Location is processed locally on your device</li>
+              <li>No location history is saved or stored</li>
+              <li>Location sharing can be disabled in Settings</li>
+              <li>GPS data never leaves your device</li>
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              🔔 Notifications & Data
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5', marginBottom: '12px' }}>
+              Bus tracking and arrival notifications are generated based on real-time data provided by bus operators and public transportation authorities.
+            </p>
+            <ul style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6', marginLeft: '20px' }}>
+              <li>No personal information is required for notifications</li>
+              <li>Bus data comes from public transportation APIs</li>
+              <li>Notifications can be disabled at any time</li>
+              <li>We don't collect usage analytics or tracking data</li>
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              💾 Stored Information
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5', marginBottom: '12px' }}>
+              The app only stores your preferences and saved routes locally on your device.
+            </p>
+            <ul style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6', marginLeft: '20px' }}>
+              <li>Saved routes are stored locally only</li>
+              <li>App settings are saved on your device</li>
+              <li>No accounts or user profiles are created</li>
+              <li>No data is shared with advertising networks</li>
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              🛡️ Data Security
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5', marginBottom: '12px' }}>
+              We implement industry-standard security measures to protect your data and privacy.
+            </p>
+            <ul style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6', marginLeft: '20px' }}>
+              <li>All map data is served over secure HTTPS connections</li>
+              <li>No sensitive personal information is collected</li>
+              <li>App operates with minimal data collection</li>
+              <li>You can clear all app data at any time</li>
+            </ul>
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '8px' }}>
+              📞 Contact & Rights
+            </h4>
+            <p style={{ fontSize: '14px', color: '#6b7280', lineHeight: '1.5', marginBottom: '12px' }}>
+              If you have any questions about this privacy policy or your data rights:
+            </p>
+            <ul style={{ fontSize: '13px', color: '#6b7280', lineHeight: '1.6', marginLeft: '20px' }}>
+              <li>You can disable location sharing at any time</li>
+              <li>You can clear all saved data in Settings</li>
+              <li>You can uninstall the app to remove all data</li>
+              <li>Contact: privacy@otgbustracker.com</li>
+            </ul>
+          </div>
+
+          <div style={{
+            background: '#f3f4f6',
+            padding: '12px',
+            borderRadius: '8px',
+            marginTop: '20px'
+          }}>
+            <p style={{
+              fontSize: '12px',
+              color: '#6b7280',
+              margin: 0,
+              lineHeight: '1.4'
+            }}>
+              <strong>Last updated:</strong> March 2024<br />
+              <strong>Version:</strong> 1.0
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
 // About Modal Component
 function AboutModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   if (!isOpen) return null
@@ -708,23 +1382,29 @@ function MenuDrawer({
   isOpen,
   onClose,
   onOpenFaq,
-  onOpenAbout
+  onOpenAbout,
+  onOpenSavedRoutes,
+  onOpenSettings,
+  onOpenPrivacy
 }: {
   isOpen: boolean;
   onClose: () => void;
   onOpenFaq: () => void;
   onOpenAbout: () => void;
+  onOpenSavedRoutes: () => void;
+  onOpenSettings: () => void;
+  onOpenPrivacy: () => void;
 }) {
   type MenuItem = { icon: React.ElementType; label: string; action: () => void } | { divider: true }
 
   const menuItems: MenuItem[] = [
-    { icon: MapPin, label: 'Saved Routes', action: () => alert('Saved Routes feature coming soon!') },
+    { icon: MapPin, label: 'Saved Routes', action: onOpenSavedRoutes },
     { divider: true },
-    { icon: Settings, label: 'Settings', action: () => alert('Settings feature coming soon!') },
+    { icon: Settings, label: 'Settings', action: onOpenSettings },
     { icon: HelpCircle, label: 'FAQ & Help', action: onOpenFaq },
     { icon: Info, label: 'About OTG', action: onOpenAbout },
     { divider: true },
-    { icon: Shield, label: 'Privacy Policy', action: () => alert('Privacy Policy: Your location data is only used for displaying your position on the map. We do not store or share your personal information.') },
+    { icon: Shield, label: 'Privacy Policy', action: onOpenPrivacy },
   ]
 
   return (
@@ -893,13 +1573,16 @@ function TerminalPopup({
   )
 }
 
-function MapView() {
+function MapView({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (value: boolean) => void }) {
   const [activeTab, setActiveTab] = useState('home')
   const [showRoutePanel, setShowRoutePanel] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [faqOpen, setFaqOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [savedRoutesOpen, setSavedRoutesOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [privacyOpen, setPrivacyOpen] = useState(false)
   const [arrivalPanelCollapsed, setArrivalPanelCollapsed] = useState(false)
   const [notifications, setNotifications] = useState(sampleNotifications)
   const [selectedTerminal, setSelectedTerminal] = useState<typeof terminals[0] | null>(null)
@@ -1523,7 +2206,33 @@ function MapView() {
           setMenuOpen(false)
           setAboutOpen(true)
         }}
+        onOpenSavedRoutes={() => {
+          setMenuOpen(false)
+          setSavedRoutesOpen(true)
+        }}
+        onOpenSettings={() => {
+          setMenuOpen(false)
+          setSettingsOpen(true)
+        }}
+        onOpenPrivacy={() => {
+          setMenuOpen(false)
+          setPrivacyOpen(true)
+        }}
       />
+
+      {/* Saved Routes Modal */}
+      <SavedRoutesModal isOpen={savedRoutesOpen} onClose={() => setSavedRoutesOpen(false)} />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        darkMode={darkMode}
+        setDarkMode={setDarkMode}
+      />
+
+      {/* Privacy Policy Modal */}
+      <PrivacyPolicyModal isOpen={privacyOpen} onClose={() => setPrivacyOpen(false)} />
 
       {/* FAQ Modal */}
       <FaqModal isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
@@ -1551,13 +2260,23 @@ function MapView() {
 
 function App() {
   const [isLoading, setIsLoading] = useState(true)
+  const [darkMode, setDarkMode] = useState(false)
+
+  // Apply dark mode to document
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark')
+    } else {
+      document.documentElement.removeAttribute('data-theme')
+    }
+  }, [darkMode])
 
   return (
     <div className="mobile-container">
       {isLoading ? (
         <LoadingPage onComplete={() => setIsLoading(false)} />
       ) : (
-        <MapView />
+        <MapView darkMode={darkMode} setDarkMode={setDarkMode} />
       )}
     </div>
   )
