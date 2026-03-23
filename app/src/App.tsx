@@ -9,18 +9,18 @@ import L from 'leaflet'
 import './App.css'
 
 // Custom icon creators
-const createBusIcon = (label: string) => {
+const createBusIcon = (label: string, color: string = '#f92f2f') => {
   return L.divIcon({
     className: 'custom-bus-icon',
     html: `<div style="
-      background: #f92f2f;
+      background: ${color};
       border-radius: 50%;
       width: 36px;
       height: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
+      color: ${color === '#ffffff' || color === '#fbbf24' ? '#1f2937' : 'white'};
       font-size: 12px;
       font-weight: bold;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
@@ -277,6 +277,8 @@ type Bus = {
   id: number
   label: string
   name: string
+  company: string
+  color: string
   route: string
   destination: string
   position: [number, number]
@@ -288,14 +290,14 @@ type Bus = {
 
 // Bus data - each bus has a route and destination
 const initialBuses: Bus[] = [
-  { id: 1, label: '1', name: 'bus 1', route: 'Davao-Cot', destination: 'Kabacan Bus Terminal', position: [7.1000, 124.9000] as [number, number], etaMinutes: 15 },
-  { id: 2, label: '2', name: 'bus 2', route: 'Gensan-CDO', destination: 'Bulua Integrated Bus Terminal', position: [6.5000, 125.0000] as [number, number], etaMinutes: 25 },
-  { id: 3, label: '3', name: 'bus 3', route: 'Davao-Cot', destination: 'Kabacan Bus Terminal', position: [7.0800, 124.8500] as [number, number], etaMinutes: 8 },
-  { id: 4, label: '4', name: 'bus 4', route: 'Cotabato-Davao', destination: 'Ecoland Bus Terminal', position: [7.1500, 124.5000] as [number, number], etaMinutes: 12 },
-  { id: 5, label: '5', name: 'bus 5', route: 'CDO-Davao', destination: 'Ecoland Bus Terminal', position: [7.5000, 125.2000] as [number, number], etaMinutes: 35 },
-  { id: 6, label: '6', name: 'bus 6', route: 'Gensan-Cotabato', destination: 'Cotabato City Terminal', position: [6.6000, 124.8000] as [number, number], etaMinutes: 20 },
-  { id: 7, label: '7', name: 'bus 7', route: 'Butuan-Surigao', destination: 'Surigao City Terminal', position: [9.2000, 125.5000] as [number, number], etaMinutes: 18 },
-  { id: 8, label: '8', name: 'bus 8', route: 'Zamboanga-Pagadian', destination: 'Pagadian City Terminal', position: [7.2000, 122.5000] as [number, number], etaMinutes: 30 },
+  { id: 1, label: '1', name: 'Mindanao Star 1', company: 'Mindanao Star', color: '#ffffff', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [7.1000, 125.3000] as [number, number], etaMinutes: 15 },
+  { id: 2, label: '2', name: 'Mindanao Star 2', company: 'Mindanao Star', color: '#ffffff', route: 'Davao-Cotabato', destination: 'Cotabato City Terminal', position: [7.2000, 125.0000] as [number, number], etaMinutes: 25 },
+  { id: 3, label: '3', name: 'Davao Metro 1', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [7.1500, 125.2000] as [number, number], etaMinutes: 18 },
+  { id: 4, label: '4', name: 'Davao Metro 2', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Arakan', destination: 'Kidapawan City Terminal', position: [7.3000, 125.1000] as [number, number], etaMinutes: 22 },
+  { id: 5, label: '5', name: 'Yellow Bus 1', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Kidapawan-Koronadal', destination: 'Koronadal City Terminal', position: [6.8000, 125.0000] as [number, number], etaMinutes: 20 },
+  { id: 6, label: '6', name: 'Yellow Bus 2', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Koronadal-Kidapawan', destination: 'Kidapawan City Terminal', position: [6.6000, 124.9000] as [number, number], etaMinutes: 16 },
+  { id: 7, label: '7', name: 'Mindanao Star 3', company: 'Mindanao Star', color: '#ffffff', route: 'Cotabato-Davao', destination: 'Ecoland Bus Terminal', position: [7.1800, 124.7000] as [number, number], etaMinutes: 30 },
+  { id: 8, label: '8', name: 'Davao Metro 3', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Kidapawan-Davao', destination: 'Ecoland Bus Terminal', position: [7.2500, 125.1500] as [number, number], etaMinutes: 12 },
 ]
 
 // Fetch route from OpenRouteService
@@ -681,9 +683,19 @@ function TerminalPopup({
         ) : (
           approachingBuses.map((bus) => (
             <div key={bus.id} className="terminal-bus-item">
-              <div className="terminal-bus-info">
-                <span className="terminal-bus-name">{bus.name}</span>
-                <span className="terminal-bus-route">Route: {bus.route}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                <div style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
+                  background: bus.color,
+                  border: bus.color === '#ffffff' ? '2px solid #d1d5db' : 'none',
+                  flexShrink: 0
+                }} />
+                <div className="terminal-bus-info">
+                  <span className="terminal-bus-name">{bus.name}</span>
+                  <span className="terminal-bus-route">{bus.company} • Route: {bus.route}</span>
+                </div>
               </div>
               <span className="terminal-bus-time">{formatEta(bus.etaMinutes)}</span>
             </div>
@@ -966,11 +978,27 @@ function MapView() {
           <div className="route-header">
             <div className="route-info">
               <h3 className="route-title">OTG Bus Tracker</h3>
-              <p className="route-subtitle">Real-time bus tracking</p>
-              <p className="route-detail">{terminals.length} terminals available</p>
-              <p className="route-detail">{buses.length} buses active</p>
+              <p className="route-subtitle">Real-time tracking across Mindanao</p>
+              <div style={{ marginTop: '8px', marginBottom: '8px' }}>
+                <span className="route-detail">{terminals.length} terminals</span>
+                <span className="route-detail">{buses.length} buses</span>
+              </div>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffffff', border: '1px solid #d1d5db' }} />
+                  <span style={{ fontSize: '10px', color: '#6b7280', fontWeight: 500 }}>Mindanao Star</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
+                  <span style={{ fontSize: '10px', color: '#6b7280', fontWeight: 500 }}>Davao Metro</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }} />
+                  <span style={{ fontSize: '10px', color: '#6b7280', fontWeight: 500 }}>Yellow Bus</span>
+                </div>
+              </div>
             </div>
-            <button 
+            <button
               className="close-btn"
               onClick={() => setShowRoutePanel(false)}
             >
@@ -1020,11 +1048,12 @@ function MapView() {
           <Marker
             key={bus.id}
             position={bus.position}
-            icon={createBusIcon(bus.label)}
+            icon={createBusIcon(bus.label, bus.color)}
           >
             <Popup>
               <div className="popup-content">
                 <strong>{bus.name}</strong>
+                <p>Company: {bus.company}</p>
                 <p>Route: {bus.route}</p>
                 <p>Destination: {bus.destination}</p>
                 <p style={{ color: '#10b981', fontWeight: 600, marginTop: '4px' }}>
@@ -1085,8 +1114,16 @@ function MapView() {
           <div className="arrival-list">
             {buses.slice(0, 3).map((bus) => (
               <div key={bus.id} className="arrival-item">
+                <div style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: bus.color,
+                  border: bus.color === '#ffffff' ? '1px solid #d1d5db' : 'none',
+                  flexShrink: 0
+                }} />
                 <span className="arrival-bus">{bus.name}</span>
-                <span className="arrival-route">({bus.route}):</span>
+                <span className="arrival-route">({bus.route})</span>
                 <span className="arrival-time">{formatEta(bus.etaMinutes)}</span>
               </div>
             ))}
