@@ -1257,7 +1257,7 @@ function MapView() {
         ...bus,
         distanceFromUser: calculateDistance(userLoc[0], userLoc[1], bus.position[0], bus.position[1])
       }))
-      .sort((a, b) => a.distanceFromUser - b.distanceFromUser) // Sort by closest first
+      .sort((a, b) => (a.distanceFromUser || 0) - (b.distanceFromUser || 0)) // Sort by closest first with fallback
       .slice(0, 3) // Take top 3 closest
   }
 
@@ -1454,7 +1454,7 @@ function MapView() {
                     <span className="arrival-bus">{bus.name}</span>
                     <span className="arrival-route">
                       ({bus.route})
-                      {busWithDistance.distanceFromUser && (
+                      {busWithDistance.distanceFromUser !== undefined && (
                         <span style={{ color: '#9ca3af', fontSize: '10px', marginLeft: '4px' }}>
                           • {busWithDistance.distanceFromUser.toFixed(1)}km away
                         </span>
