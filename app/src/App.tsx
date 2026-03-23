@@ -288,31 +288,104 @@ type Bus = {
   needsNewRoute?: boolean // Flag to indicate bus needs a new route fetched
 }
 
-// Bus data - each bus has a route and destination (positioned on roads near terminals)
+// Bus data - each bus has a route and destination (positioned on main highways near terminals)
 const initialBuses: Bus[] = [
-  // Mindanao Star buses (white) - starting from roads near Ecoland Terminal Davao
+  // Mindanao Star buses (white) - positioned on highway near Davao
   { id: 1, label: '1', name: 'Mindanao Star 1', company: 'Mindanao Star', color: '#ffffff', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [7.0695, 125.6095] as [number, number], etaMinutes: 35 },
   { id: 2, label: '2', name: 'Mindanao Star 2', company: 'Mindanao Star', color: '#ffffff', route: 'Davao-Cotabato', destination: 'Cotabato City Terminal', position: [7.0715, 125.6075] as [number, number], etaMinutes: 52 },
-  { id: 7, label: '7', name: 'Mindanao Star 3', company: 'Mindanao Star', color: '#ffffff', route: 'Cotabato-Davao', destination: 'Ecoland Bus Terminal', position: [7.2225, 124.2455] as [number, number], etaMinutes: 48 },
+  { id: 7, label: '7', name: 'Mindanao Star 3', company: 'Mindanao Star', color: '#ffffff', route: 'Cotabato-Davao', destination: 'Ecoland Bus Terminal', position: [7.1937, 124.5372] as [number, number], etaMinutes: 48 }, // Near Midsayap on highway
 
-  // Davao Metro Shuttle buses (red) - starting from roads near terminals
-  { id: 3, label: '3', name: 'Davao Metro 1', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [7.0720, 125.6080] as [number, number], etaMinutes: 38 },
-  { id: 4, label: '4', name: 'Davao Metro 2', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Kidapawan-Davao', destination: 'Ecoland Bus Terminal', position: [7.0095, 125.0885] as [number, number], etaMinutes: 42 },
-  { id: 8, label: '8', name: 'Davao Metro 3', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Arakan', destination: 'Kidapawan City Terminal', position: [7.0700, 125.6100] as [number, number], etaMinutes: 45 },
+  // Davao Metro Shuttle buses (red) - positioned on highways
+  { id: 3, label: '3', name: 'Davao Metro 1', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [6.7833, 125.2167] as [number, number], etaMinutes: 38 }, // Near Bansalan on highway
+  { id: 4, label: '4', name: 'Davao Metro 2', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Kidapawan-Davao', destination: 'Ecoland Bus Terminal', position: [6.9478, 125.0631] as [number, number], etaMinutes: 42 }, // Near Makilala on highway
+  { id: 8, label: '8', name: 'Davao Metro 3', company: 'Davao Metro Shuttle', color: '#ef4444', route: 'Davao-Kidapawan', destination: 'Kidapawan City Terminal', position: [6.7498, 125.3572] as [number, number], etaMinutes: 45 }, // Near Digos on highway
 
-  // Yellow Bus Liners (yellow) - operating Kidapawan-Koronadal route on main roads
-  { id: 5, label: '5', name: 'Yellow Bus 1', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Kidapawan-Koronadal', destination: 'Koronadal City Terminal', position: [7.0085, 125.0885] as [number, number], etaMinutes: 28 },
-  { id: 6, label: '6', name: 'Yellow Bus 2', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Koronadal-Kidapawan', destination: 'Kidapawan City Terminal', position: [6.5015, 124.8475] as [number, number], etaMinutes: 32 },
+  // Yellow Bus Liners (yellow) - positioned on Kidapawan-Koronadal highway
+  { id: 5, label: '5', name: 'Yellow Bus 1', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Kidapawan-Koronadal', destination: 'Koronadal City Terminal', position: [6.6903, 124.6767] as [number, number], etaMinutes: 28 }, // Near Tacurong on highway
+  { id: 6, label: '6', name: 'Yellow Bus 2', company: 'Yellow Bus Liners', color: '#fbbf24', route: 'Koronadal-Kidapawan', destination: 'Kidapawan City Terminal', position: [6.5015, 124.8475] as [number, number], etaMinutes: 32 }, // Near Koronadal
 ]
+
+// Intermediate waypoints for major highway routes in Mindanao
+const getRouteWaypoints = (start: [number, number], end: [number, number]): [number, number][] => {
+  const startStr = `${start[0]},${start[1]}`
+  const endStr = `${end[0]},${end[1]}`
+
+  // Define major town coordinates along highways
+  const towns = {
+    davao: [7.0707, 125.6087],      // Davao City (Ecoland)
+    kidapawan: [7.0089, 125.0892],  // Kidapawan City
+    cotabato: [7.2236, 124.2464],   // Cotabato City
+    koronadal: [6.5008, 124.8469],  // Koronadal City
+    makilala: [6.9478, 125.0631],   // Makilala (between Kidapawan-Digos)
+    bansalan: [6.7833, 125.2167],   // Bansalan (between Makilala-Digos)
+    digos: [6.7498, 125.3572],      // Digos City (between Bansalan-Davao)
+    kabacan: [7.1065, 124.8293],    // Kabacan (between Kidapawan-Cotabato)
+    midsayap: [7.1937, 124.5372],   // Midsayap (between Kabacan-Cotabato)
+    tacurong: [6.6903, 124.6767],   // Tacurong (between Koronadal-Cotabato)
+  }
+
+  const getTownName = (coords: [number, number]): string => {
+    for (const [name, townCoords] of Object.entries(towns)) {
+      if (Math.abs(coords[0] - townCoords[0]) < 0.01 && Math.abs(coords[1] - townCoords[1]) < 0.01) {
+        return name.charAt(0).toUpperCase() + name.slice(1)
+      }
+    }
+    return `${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`
+  }
+
+  // Define route patterns through intermediate towns
+  const routePatterns: { [key: string]: [number, number][] } = {
+    // Kidapawan ↔ Davao (via Makilala → Bansalan → Digos)
+    'kidapawan-davao': [towns.kidapawan, towns.makilala, towns.bansalan, towns.digos, towns.davao],
+    'davao-kidapawan': [towns.davao, towns.digos, towns.bansalan, towns.makilala, towns.kidapawan],
+
+    // Kidapawan ↔ Cotabato (via Kabacan → Midsayap)
+    'kidapawan-cotabato': [towns.kidapawan, towns.kabacan, towns.midsayap, towns.cotabato],
+    'cotabato-kidapawan': [towns.cotabato, towns.midsayap, towns.kabacan, towns.kidapawan],
+
+    // Davao ↔ Cotabato (via Digos → Bansalan → Makilala → Kidapawan → Kabacan → Midsayap)
+    'davao-cotabato': [towns.davao, towns.digos, towns.bansalan, towns.makilala, towns.kidapawan, towns.kabacan, towns.midsayap, towns.cotabato],
+    'cotabato-davao': [towns.cotabato, towns.midsayap, towns.kabacan, towns.kidapawan, towns.makilala, towns.bansalan, towns.digos, towns.davao],
+
+    // Kidapawan ↔ Koronadal (via Tacurong)
+    'kidapawan-koronadal': [towns.kidapawan, towns.tacurong, towns.koronadal],
+    'koronadal-kidapawan': [towns.koronadal, towns.tacurong, towns.kidapawan],
+  }
+
+  // Find matching route pattern
+  for (const [pattern, waypoints] of Object.entries(routePatterns)) {
+    const firstTown = waypoints[0]
+    const lastTown = waypoints[waypoints.length - 1]
+
+    // Check if start/end points are close to the pattern endpoints (within ~5km)
+    if (Math.abs(start[0] - firstTown[0]) < 0.05 && Math.abs(start[1] - firstTown[1]) < 0.05 &&
+        Math.abs(end[0] - lastTown[0]) < 0.05 && Math.abs(end[1] - lastTown[1]) < 0.05) {
+      console.log(`🛣️ Using highway route pattern: ${pattern}`)
+      console.log(`   Route: ${waypoints.map(coord => getTownName(coord)).join(' → ')}`)
+      return waypoints
+    }
+  }
+
+  // Fallback: direct route
+  console.log('🛣️ Using direct route (no highway pattern found)')
+  return [start, end]
+}
 
 // Fetch route from OpenRouteService
 async function fetchRoute(start: [number, number], end: [number, number]): Promise<[number, number][] | null> {
   try {
+    // Get intermediate waypoints for realistic highway routing
+    const waypoints = getRouteWaypoints(start, end)
+
     console.log('🔄 Fetching route from ORS API:', {
       start: `${start[0]}, ${start[1]}`,
       end: `${end[0]}, ${end[1]}`,
-      coordinates: [[start[1], start[0]], [end[1], end[0]]]
+      waypoints_count: waypoints.length,
+      route_towns: waypoints.length
     })
+
+    // Convert all waypoints to ORS format [lng, lat]
+    const orsCoordinates = waypoints.map(point => [point[1], point[0]])
 
     const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
       method: 'POST',
@@ -322,16 +395,14 @@ async function fetchRoute(start: [number, number], end: [number, number]): Promi
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        coordinates: [[start[1], start[0]], [end[1], end[0]]], // ORS uses [lng, lat]
+        coordinates: orsCoordinates,
         format: 'geojson',
-        geometry_simplify: false,  // Get more detailed route points
-        continue_straight: false,  // Allow turns for more accurate routing
+        geometry_simplify: false,  // Get detailed route points
+        continue_straight: false,  // Allow turns for accurate routing
         options: {
           avoid_features: [],
           profile_params: {
-            restrictions: {
-              // No special restrictions to ensure natural road following
-            }
+            restrictions: {}
           }
         }
       })
@@ -341,12 +412,15 @@ async function fetchRoute(start: [number, number], end: [number, number]): Promi
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('❌ Route fetch failed:', {
+      console.error('❌ Multi-waypoint route fetch failed:', {
         status: response.status,
         statusText: response.statusText,
         error: errorText
       })
-      return null
+
+      // Fallback: fetch route segments individually and combine
+      console.log('🔄 Falling back to segment-by-segment routing...')
+      return await fetchRouteSegments(waypoints)
     }
 
     const data = await response.json()
@@ -354,7 +428,7 @@ async function fetchRoute(start: [number, number], end: [number, number]): Promi
 
     if (!data.features || !data.features[0] || !data.features[0].geometry) {
       console.error('❌ Invalid route response format:', data)
-      return null
+      return await fetchRouteSegments(waypoints)
     }
 
     const coordinates = data.features[0].geometry.coordinates
@@ -364,29 +438,96 @@ async function fetchRoute(start: [number, number], end: [number, number]): Promi
       last_point: coordinates[coordinates.length - 1]
     })
 
-    // Convert from [lng, lat] to [lat, lng] and ensure we have enough points
+    // Convert from [lng, lat] to [lat, lng]
     const routePoints = coordinates.map((coord: number[]) => [coord[1], coord[0]] as [number, number])
 
-    // If we have very few points, add interpolated points for smoother movement
-    if (routePoints.length < 10) {
+    // Ensure we have enough points for smooth movement
+    if (routePoints.length < 20) {
       console.log('🔄 Interpolating points for smoother movement...')
       const interpolatedPoints: [number, number][] = []
       for (let i = 0; i < routePoints.length - 1; i++) {
         interpolatedPoints.push(routePoints[i])
-        // Add a midpoint between each pair of coordinates
-        const midLat = (routePoints[i][0] + routePoints[i + 1][0]) / 2
-        const midLng = (routePoints[i][1] + routePoints[i + 1][1]) / 2
-        interpolatedPoints.push([midLat, midLng])
+        // Add 2-3 midpoints between each pair for ultra-smooth movement
+        const steps = 3
+        for (let step = 1; step < steps; step++) {
+          const fraction = step / steps
+          const midLat = routePoints[i][0] + (routePoints[i + 1][0] - routePoints[i][0]) * fraction
+          const midLng = routePoints[i][1] + (routePoints[i + 1][1] - routePoints[i][1]) * fraction
+          interpolatedPoints.push([midLat, midLng])
+        }
       }
       interpolatedPoints.push(routePoints[routePoints.length - 1])
       console.log('✅ Route interpolated:', interpolatedPoints.length, 'total points')
       return interpolatedPoints
     }
 
-    console.log('✅ Route fetched successfully:', routePoints.length, 'waypoints')
+    console.log('✅ Highway route fetched successfully:', routePoints.length, 'waypoints')
     return routePoints
   } catch (error) {
     console.error('❌ Error fetching route:', error)
+    // Final fallback: try segment-by-segment
+    const waypoints = getRouteWaypoints(start, end)
+    return await fetchRouteSegments(waypoints)
+  }
+}
+
+// Fallback function to fetch route segments individually
+async function fetchRouteSegments(waypoints: [number, number][]): Promise<[number, number][] | null> {
+  try {
+    console.log('🔄 Fetching route segments individually...')
+    const allRoutePoints: [number, number][] = []
+
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const segmentStart = waypoints[i]
+      const segmentEnd = waypoints[i + 1]
+
+      console.log(`   Segment ${i + 1}: ${segmentStart} → ${segmentEnd}`)
+
+      const response = await fetch('https://api.openrouteservice.org/v2/directions/driving-car', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8',
+          'Authorization': ORS_API_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          coordinates: [[segmentStart[1], segmentStart[0]], [segmentEnd[1], segmentEnd[0]]],
+          format: 'geojson',
+          geometry_simplify: false,
+          continue_straight: false
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.features?.[0]?.geometry?.coordinates) {
+          const segmentCoords = data.features[0].geometry.coordinates
+          const segmentPoints = segmentCoords.map((coord: number[]) => [coord[1], coord[0]] as [number, number])
+
+          // Add points, avoiding duplicates at segment boundaries
+          if (allRoutePoints.length === 0) {
+            allRoutePoints.push(...segmentPoints)
+          } else {
+            // Skip first point of segment to avoid duplicate
+            allRoutePoints.push(...segmentPoints.slice(1))
+          }
+
+          console.log(`   ✅ Segment ${i + 1} added: ${segmentPoints.length} points`)
+        }
+      } else {
+        console.warn(`   ⚠️ Segment ${i + 1} failed, using straight line`)
+        // Add straight line segment as fallback
+        if (allRoutePoints.length === 0) {
+          allRoutePoints.push(segmentStart)
+        }
+        allRoutePoints.push(segmentEnd)
+      }
+    }
+
+    console.log('✅ Combined route segments:', allRoutePoints.length, 'total points')
+    return allRoutePoints.length > 0 ? allRoutePoints : null
+  } catch (error) {
+    console.error('❌ Error fetching route segments:', error)
     return null
   }
 }
@@ -853,25 +994,26 @@ function MapView() {
     }
   }, [])
 
-  // Helper function to get road-aligned position near a terminal
+  // Helper function to get highway-aligned position near a terminal
   const getRoadPosition = (terminalName: string): [number, number] => {
-    // Return positions on roads near terminals instead of exact terminal centers
+    // Return positions on main highway near terminals for realistic departure points
     switch (terminalName) {
       case 'Ecoland Bus Terminal':
-        return [7.0695, 125.6095] // Road position near Ecoland
+        return [7.0695, 125.6095] // Highway position near Ecoland (MacArthur Highway)
       case 'Kidapawan City Terminal':
-        return [7.0095, 125.0885] // Road position near Kidapawan terminal
+        return [7.0089, 125.0892] // Highway position near Kidapawan terminal (Cotabato-Davao Road)
       case 'Cotabato City Terminal':
-        return [7.2225, 124.2455] // Road position near Cotabato terminal
+        return [7.1937, 124.5372] // Highway position near Cotabato (via Midsayap on Cotabato-Davao Road)
       case 'Koronadal City Terminal':
-        return [6.5015, 124.8475] // Road position near Koronadal terminal
+        return [6.6903, 124.6767] // Highway position near Koronadal (via Tacurong on Koronadal-Kidapawan Road)
       default:
-        // For other terminals, offset slightly from center to be on nearby roads
+        // For other terminals, use positions on nearby main highways
         const terminal = terminals.find(t => t.name === terminalName)
         if (terminal) {
-          return [terminal.position[0] + 0.001, terminal.position[1] + 0.001]
+          // Offset to nearby main road position
+          return [terminal.position[0] + 0.002, terminal.position[1] + 0.002]
         }
-        return [7.0695, 125.6095] // Default fallback
+        return [7.0695, 125.6095] // Default to Davao highway position
     }
   }
 
@@ -1094,6 +1236,31 @@ function MapView() {
     setSelectedTerminal(terminal)
   }
 
+  // Calculate distance between two coordinates (Haversine formula)
+  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371 // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLng = (lng2 - lng1) * Math.PI / 180
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+    return R * c // Distance in kilometers
+  }
+
+  // Get buses sorted by distance from user location
+  const getNearbyBuses = (userLoc: [number, number] | null, allBuses: Bus[]): Bus[] => {
+    if (!userLoc) return allBuses.slice(0, 3) // Fallback if no user location
+
+    return allBuses
+      .map(bus => ({
+        ...bus,
+        distanceFromUser: calculateDistance(userLoc[0], userLoc[1], bus.position[0], bus.position[1])
+      }))
+      .sort((a, b) => a.distanceFromUser - b.distanceFromUser) // Sort by closest first
+      .slice(0, 3) // Take top 3 closest
+  }
+
   // Format ETA display
   const formatEta = (minutes: number) => {
     if (minutes < 1) return 'Arriving'
@@ -1202,17 +1369,17 @@ function MapView() {
           </Marker>
         ))}
 
-        {/* Route paths */}
+        {/* Route paths - Highway routes through intermediate towns */}
         {buses.map((bus) =>
           bus.routePath && bus.routePath.length > 0 ? (
             <Polyline
               key={`route-${bus.id}`}
               positions={bus.routePath}
               pathOptions={{
-                color: bus.color === '#ffffff' ? '#ff6b6b' : bus.color,
-                weight: 4,
-                opacity: 0.7,
-                dashArray: '10, 10'
+                color: bus.color === '#ffffff' ? '#ff6b6b' : bus.color === '#fbbf24' ? '#f59e0b' : bus.color,
+                weight: 5,
+                opacity: 0.8,
+                dashArray: bus.company === 'Mindanao Star' ? '15, 10' : bus.company === 'Yellow Bus Liners' ? '10, 5' : '20, 5'
               }}
             />
           ) : null
@@ -1255,7 +1422,12 @@ function MapView() {
             userSelect: 'none'
           }}
         >
-          <h4 style={{ margin: 0 }}>Nearby Buses</h4>
+          <h4 style={{ margin: 0 }}>
+            {userLocation ? 'Nearby Buses' : 'Buses'}
+            <span style={{ fontSize: '11px', fontWeight: 400, color: '#9ca3af', marginLeft: '6px' }}>
+              {userLocation ? '(closest to you)' : '(location needed)'}
+            </span>
+          </h4>
           <ChevronDown
             size={20}
             style={{
@@ -1266,21 +1438,33 @@ function MapView() {
         </div>
         {!arrivalPanelCollapsed && (
           <div className="arrival-list">
-            {buses.slice(0, 3).map((bus) => (
-              <div key={bus.id} className="arrival-item">
-                <div style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  background: bus.color,
-                  border: bus.color === '#ffffff' ? '1px solid #d1d5db' : 'none',
-                  flexShrink: 0
-                }} />
-                <span className="arrival-bus">{bus.name}</span>
-                <span className="arrival-route">({bus.route})</span>
-                <span className="arrival-time">{formatEta(bus.etaMinutes)}</span>
-              </div>
-            ))}
+            {getNearbyBuses(userLocation, buses).map((bus) => {
+              const busWithDistance = bus as Bus & { distanceFromUser?: number }
+              return (
+                <div key={bus.id} className="arrival-item">
+                  <div style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: bus.color,
+                    border: bus.color === '#ffffff' ? '1px solid #d1d5db' : 'none',
+                    flexShrink: 0
+                  }} />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span className="arrival-bus">{bus.name}</span>
+                    <span className="arrival-route">
+                      ({bus.route})
+                      {busWithDistance.distanceFromUser && (
+                        <span style={{ color: '#9ca3af', fontSize: '10px', marginLeft: '4px' }}>
+                          • {busWithDistance.distanceFromUser.toFixed(1)}km away
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <span className="arrival-time">{formatEta(bus.etaMinutes)}</span>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
