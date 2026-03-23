@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import {
   Home, Menu, Bell, X, Navigation,
   HelpCircle, Shield, Settings,
-  ChevronRight, Bus, MapPin, Info
+  ChevronRight, Bus, MapPin, Info, ChevronDown
 } from 'lucide-react'
 import L from 'leaflet'
 import './App.css'
@@ -701,6 +701,7 @@ function MapView() {
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [faqOpen, setFaqOpen] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [arrivalPanelCollapsed, setArrivalPanelCollapsed] = useState(false)
   const [notifications, setNotifications] = useState(sampleNotifications)
   const [selectedTerminal, setSelectedTerminal] = useState<typeof terminals[0] | null>(null)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
@@ -1060,16 +1061,37 @@ function MapView() {
 
       {/* Arrival Panel */}
       <div className="arrival-panel">
-        <h4 className="arrival-title">Nearby Buses</h4>
-        <div className="arrival-list">
-          {buses.slice(0, 3).map((bus) => (
-            <div key={bus.id} className="arrival-item">
-              <span className="arrival-bus">{bus.name}</span>
-              <span className="arrival-route">({bus.route}):</span>
-              <span className="arrival-time">{formatEta(bus.etaMinutes)}</span>
-            </div>
-          ))}
+        <div
+          className="arrival-title"
+          onClick={() => setArrivalPanelCollapsed(!arrivalPanelCollapsed)}
+          style={{
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            userSelect: 'none'
+          }}
+        >
+          <h4 style={{ margin: 0 }}>Nearby Buses</h4>
+          <ChevronDown
+            size={20}
+            style={{
+              transition: 'transform 0.3s ease',
+              transform: arrivalPanelCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)'
+            }}
+          />
         </div>
+        {!arrivalPanelCollapsed && (
+          <div className="arrival-list">
+            {buses.slice(0, 3).map((bus) => (
+              <div key={bus.id} className="arrival-item">
+                <span className="arrival-bus">{bus.name}</span>
+                <span className="arrival-route">({bus.route}):</span>
+                <span className="arrival-time">{formatEta(bus.etaMinutes)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom Navigation */}
