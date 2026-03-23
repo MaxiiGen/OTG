@@ -307,21 +307,18 @@ const initialBuses: Bus[] = [
 
 // Intermediate waypoints for major highway routes in Mindanao
 const getRouteWaypoints = (start: [number, number], end: [number, number]): [number, number][] => {
-  const startStr = `${start[0]},${start[1]}`
-  const endStr = `${end[0]},${end[1]}`
-
   // Define major town coordinates along highways
   const towns = {
-    davao: [7.0707, 125.6087],      // Davao City (Ecoland)
-    kidapawan: [7.0089, 125.0892],  // Kidapawan City
-    cotabato: [7.2236, 124.2464],   // Cotabato City
-    koronadal: [6.5008, 124.8469],  // Koronadal City
-    makilala: [6.9478, 125.0631],   // Makilala (between Kidapawan-Digos)
-    bansalan: [6.7833, 125.2167],   // Bansalan (between Makilala-Digos)
-    digos: [6.7498, 125.3572],      // Digos City (between Bansalan-Davao)
-    kabacan: [7.1065, 124.8293],    // Kabacan (between Kidapawan-Cotabato)
-    midsayap: [7.1937, 124.5372],   // Midsayap (between Kabacan-Cotabato)
-    tacurong: [6.6903, 124.6767],   // Tacurong (between Koronadal-Cotabato)
+    davao: [7.0707, 125.6087] as [number, number],      // Davao City (Ecoland)
+    kidapawan: [7.0089, 125.0892] as [number, number],  // Kidapawan City
+    cotabato: [7.2236, 124.2464] as [number, number],   // Cotabato City
+    koronadal: [6.5008, 124.8469] as [number, number],  // Koronadal City
+    makilala: [6.9478, 125.0631] as [number, number],   // Makilala (between Kidapawan-Digos)
+    bansalan: [6.7833, 125.2167] as [number, number],   // Bansalan (between Makilala-Digos)
+    digos: [6.7498, 125.3572] as [number, number],      // Digos City (between Bansalan-Davao)
+    kabacan: [7.1065, 124.8293] as [number, number],    // Kabacan (between Kidapawan-Cotabato)
+    midsayap: [7.1937, 124.5372] as [number, number],   // Midsayap (between Kabacan-Cotabato)
+    tacurong: [6.6903, 124.6767] as [number, number],   // Tacurong (between Koronadal-Cotabato)
   }
 
   const getTownName = (coords: [number, number]): string => {
