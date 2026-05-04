@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-
 import {
   Home, Menu, Bell, X, Navigation,
   HelpCircle, Shield, Settings,
-  ChevronRight, Bus, MapPin, Info, ChevronDown
+  ChevronRight, Bus, MapPin, Info, ChevronDown, Download
 } from 'lucide-react'
 import L from 'leaflet'
 import './App.css'
@@ -1385,7 +1385,9 @@ function MenuDrawer({
   onOpenAbout,
   onOpenSavedRoutes,
   onOpenSettings,
-  onOpenPrivacy
+  onOpenPrivacy,
+  onDownload,
+  showDownload
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -1394,18 +1396,24 @@ function MenuDrawer({
   onOpenSavedRoutes: () => void;
   onOpenSettings: () => void;
   onOpenPrivacy: () => void;
+  onDownload: () => void;
+  showDownload: boolean;
 }) {
   type MenuItem = { icon: React.ElementType; label: string; action: () => void } | { divider: true }
 
-  const menuItems: MenuItem[] = [
+  const allMenuItems: MenuItem[] = [
     { icon: MapPin, label: 'Saved Routes', action: onOpenSavedRoutes },
     { divider: true },
+    ...(showDownload ? [{ icon: Download, label: 'Download App', action: onDownload } as MenuItem] : []),
+    ...(showDownload ? [{ divider: true } as MenuItem] : []),
     { icon: Settings, label: 'Settings', action: onOpenSettings },
     { icon: HelpCircle, label: 'FAQ & Help', action: onOpenFaq },
     { icon: Info, label: 'About OTG', action: onOpenAbout },
     { divider: true },
     { icon: Shield, label: 'Privacy Policy', action: onOpenPrivacy },
   ]
+  
+  const menuItems = allMenuItems.filter(item => item !== null && item !== undefined)
 
   return (
     <>
@@ -1590,6 +1598,38 @@ function MapView({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (v
   const [locationLoading, setLocationLoading] = useState(true)
   const [mapCenter, setMapCenter] = useState<[number, number]>([7.0707, 125.6087]) // Davao City (Ecoland)
   const [buses, setBuses] = useState<Bus[]>(initialBuses)
+  const [installPrompt, setInstallPrompt] = useState<any>(null)
+  const [showDownload, setShowDownload] = useState(false)
+
+  // Handle PWA install prompt
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault()
+      setInstallPrompt(e)
+      setShowDownload(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+    window.addEventListener('appinstalled', () => {
+      setShowDownload(false)
+    })
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
+  }, [])
+
+  const handleDownloadApp = async () => {
+    if (installPrompt) {
+      installPrompt.prompt()
+      const { outcome } = await installPrompt.userChoice
+      if (outcome === 'accepted') {
+        setShowDownload(false)
+      }
+      setInstallPrompt(null)
+    }
+  }
 
   // Fetch initial routes for all buses
   useEffect(() => {
@@ -2218,6 +2258,8 @@ function MapView({ darkMode, setDarkMode }: { darkMode: boolean; setDarkMode: (v
           setMenuOpen(false)
           setPrivacyOpen(true)
         }}
+        onDownload={handleDownloadApp}
+        showDownload={showDownload}
       />
 
       {/* Saved Routes Modal */}
