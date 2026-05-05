@@ -1153,36 +1153,6 @@ function SettingsModal({
             </div>
           </div>
 
-          <div>
-            <h4 style={{ color: '#f92f2f', fontSize: '15px', fontWeight: '600', marginBottom: '16px' }}>
-              💾 Data Management
-            </h4>
-            <button style={{
-              width: '100%',
-              background: 'white',
-              color: '#374151',
-              border: '1px solid #d1d5db',
-              borderRadius: '12px',
-              padding: '12px',
-              fontSize: '14px',
-              cursor: 'pointer',
-              marginBottom: '8px'
-            }}>
-              Clear Cache
-            </button>
-            <button style={{
-              width: '100%',
-              background: '#fef2f2',
-              color: '#dc2626',
-              border: '1px solid #fecaca',
-              borderRadius: '12px',
-              padding: '12px',
-              fontSize: '14px',
-              cursor: 'pointer'
-            }}>
-              Reset All Settings
-            </button>
-          </div>
         </div>
       </div>
     </>
